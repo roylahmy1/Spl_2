@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
  * No public constructor is allowed except for the empty constructor.
  */
 public class Future<T> {
-	
+
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
@@ -25,6 +25,8 @@ public class Future<T> {
      * not been completed.
      * <p>
      * @return return the result of type T if it is available, if not wait until it is available.
+     * @pre: None
+     * @post: this.getSpeed() == speed
      * 	       
      */
 	public T get() {
