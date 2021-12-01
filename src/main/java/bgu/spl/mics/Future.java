@@ -12,11 +12,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class Future<T> {
 
+	private boolean isResolved;
+	private T result;
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
 	public Future() {
-		//TODO: implement this
+		isResolved = false;
 	}
 	
 	/**
@@ -26,43 +28,59 @@ public class Future<T> {
      * <p>
      * @return return the result of type T if it is available, if not wait until it is available.
      * @pre: None
-     * @post: this.getSpeed() == speed
+     * @post: none
      * 	       
      */
-	public T get() {
-		//TODO: implement this.
-		return null;
+	public synchronized T get() throws InterruptedException {
+		while (isResolved){
+			try{
+				wait();
+			}
+			catch (InterruptedException ex){
+				ex.printStackTrace();
+			}
+		}
+		return result;
 	}
 	
 	/**
      * Resolves the result of this Future object.
      */
-	public void resolve (T result) {
-		//TODO: implement this.
+	public synchronized void resolve (T result) {
+		this.result = result;
+		this.isResolved = true;
+		//
+		notifyAll();
 	}
 	
 	/**
      * @return true if this object has been resolved, false otherwise
      */
-	public boolean isDone() {
-		//TODO: implement this.
-		return false;
+	public synchronized boolean isDone() {
+		return isResolved;
 	}
 	
 	/**
      * retrieves the result the Future object holds if it has been resolved,
-     * This method is non-blocking, it has a limited amount of time determined
-     * by {@code timeout}
-     * <p>
-     * @param timout 	the maximal amount of time units to wait for the result.
-     * @param unit		the {@link TimeUnit} time units to wait.
-     * @return return the result of type T if it is available, if not, 
-     * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
-     *         elapsed, return null.
+	 *      * This method is non-blocking, it has a limited amount of time determined
+	 *      * by {@code timeout}
+	 *      * <p>
+	 *      * @param timout 	the maximal amount of time units to wait for the result.
+	 *      * @param unit		the {@link TimeUnit} time units to wait.
+	 *      * @return return the result of type T if it is available, if not,
+	 *      * 	       wait for {@code timeout} TimeUnits {@code unit}. If time has
+	 *      *         elapsed, return null.
      */
-	public T get(long timeout, TimeUnit unit) {
-		//TODO: implement this.
-		return null;
+	public synchronized T get(long timeout, TimeUnit unit) {
+		while (isResolved) {
+			try{
+				wait(unit.toMillis(timeout));
+			}
+			catch (InterruptedException ex){
+				ex.printStackTrace();
+			}
+		}
+		return result;
 	}
 
 }

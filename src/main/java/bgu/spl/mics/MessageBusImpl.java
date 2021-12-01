@@ -1,5 +1,7 @@
 package bgu.spl.mics;
 
+import java.util.Map;
+
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
  * Write your implementation here!
@@ -7,9 +9,26 @@ package bgu.spl.mics;
  */
 public class MessageBusImpl implements MessageBus {
 
+	// lock A
+	// subscribers hash map
+	// msgType -> services, lastCalled
+	// msgType -> services, lastCalled
+	//
+
+	// lock B
+	// services hash map
+	// service -> queue = {}
+	// service -> queue = {}
+	// service -> queue = {}
+
+	// adding service will not conflict
+	// removing service should block pulling event from
+	//
+
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		// TODO Auto-generated method stub
+
+
 
 	}
 
@@ -40,7 +59,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void register(MicroService m) {
-		// TODO Auto-generated method stub
+		Map<, MicroService>
 
 	}
 
