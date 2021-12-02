@@ -6,5 +6,23 @@ package bgu.spl.mics.application.objects;
  */
 
 public class DataBatch {
-    
+
+    private Data container;
+    private boolean processed;
+    private int startIndex;
+    public DataBatch(Data container, int startIndex){
+        this.startIndex = startIndex;
+        this.container = container;
+        processed = false;
+    }
+    public Data getContainer() {
+        return container;
+    }
+    public boolean isProcessed() {
+        return processed;
+    }
+    public void finished() {
+        processed = true;
+        container.batchCompleted();
+    }
 }

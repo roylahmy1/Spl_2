@@ -7,4 +7,18 @@ package bgu.spl.mics.application.objects;
  */
 public class CPU {
 
+    public CPU() {
+
+    }
+
+    //
+    public void processTick(){
+
+    }
+    // get a DB from the cluster
+    private void getBD(){
+
+    }
+
+
 }

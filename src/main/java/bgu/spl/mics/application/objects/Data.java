@@ -15,4 +15,19 @@ public class Data {
     private Type type;
     private int processed;
     private int size;
+    private DataBatch[] dataBatches;
+    public Data(int size, Type type){
+        processed = 0;
+        dataBatches = new DataBatch[size];
+        for (int i = 0; i < size; i++) {
+            dataBatches[i] = new DataBatch(this, i * 1000);
+        }
+    }
+    public synchronized void batchCompleted(){
+        processed++;
+    }
+    // when processed++ will not cause damage if isCompleted
+    public boolean isCompleted(){
+        return processed >= size;
+    }
 }
