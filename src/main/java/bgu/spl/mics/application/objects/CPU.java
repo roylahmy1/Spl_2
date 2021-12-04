@@ -11,17 +11,23 @@ public class CPU {
 
     private int cores;
     private Chunk unprocessedData;
+    private int chunkIndex;
     private Cluster theCluster;
 
-    public CPU(int cores) {
+    public CPU(int cores, Cluster theCluster) {
         this.cores = cores;
+        this.theCluster = theCluster;
     }
     //
     public synchronized void processTick(){
-
+        // process DB and update cluster accordingly
     }
     // get a DB set from the cluster
-    private void getChunk(){
+    public void updateChunk(){
 
+    }
+    // check if chunk in empty, or still running
+    public boolean checkChunk(){
+        return chunkIndex <= unprocessedData.getEndIndex() && chunkIndex >= unprocessedData.getStartIndex();
     }
 }

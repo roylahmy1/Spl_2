@@ -16,11 +16,23 @@ public class GPU {
     private DatabatchQueue VRAM;
     private final int VRAMSize = 16;
 
+    /**
+     * @INV:
+     * model != null
+     */
+
     public GPU(Cluster theCluster, Type type){
         this.type = type;
         this.theCluster = theCluster;
         // define the gpu
     }
+
+    /**
+     * @PRE:
+     * model == null
+     * @POST:
+     *
+     */
     public synchronized void initProcess(Model model){
         this.model = model;
 
@@ -43,14 +55,15 @@ public class GPU {
         }
     }
     // check if VRAM need's refill
-    private boolean checkVRAM(){
+    public boolean checkVRAM(){
         return VRAM.isEmpty();
     }
     // if VRAM is empty (or close to it) then refill it
-    private void fillVRAM(){
+    public void fillVRAM(){
         VRAM = Cluster.getInstance().getProcessedData(this, VRAMSize);
     }
 
+    public boolean isCompleted
 
     public synchronized Model.Status getStatus(){
         return model.getStatus();
@@ -58,5 +71,7 @@ public class GPU {
     public synchronized void clean(){
         this.model = null;
     }
-
+    public Model getModel() {
+        return model;
+    }
 }

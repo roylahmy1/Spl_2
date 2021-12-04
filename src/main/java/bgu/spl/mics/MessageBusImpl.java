@@ -97,10 +97,10 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
 		// TODO Auto-generated method stub
-		while (){
-			wait();
-		}
-
+//		while (){
+//			wait();
+//		}
+//
 
 		return null;
 	}

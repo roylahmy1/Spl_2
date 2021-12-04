@@ -24,7 +24,7 @@ public class Model {
     private Status status;
     private int Trained;
 
-    public Model(){
+    public Model(String stringName, Data data, Student student){
         status = Status.PreTrained;
         results = Results.None;
         Trained = 0;
