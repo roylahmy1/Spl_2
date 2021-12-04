@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Queue;
+
 /**
  * Passive object representing a single CPU.
  * Add all the fields described in the assignment as private fields.
@@ -7,18 +9,23 @@ package bgu.spl.mics.application.objects;
  */
 public class CPU {
 
-    public CPU() {
+    private int cores;
+    private Queue<DataBatch> unprocessedData;
+    private Cluster theCluster;
 
+    public CPU(int cores) {
+        this.cores = cores;
     }
-
     //
-    public void processTick(){
+    public synchronized void processTick(){
 
     }
-    // get a DB from the cluster
-    private void getBD(){
+    // get a DB set from the cluster
+    private void getChunk(){
 
     }
+    // send DB set to the cluster
+    private void sendChunk(){
 
-
+    }
 }

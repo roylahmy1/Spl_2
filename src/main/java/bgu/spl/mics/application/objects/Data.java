@@ -26,8 +26,12 @@ public class Data {
     public synchronized void batchCompleted(){
         processed++;
     }
+    public synchronized DataBatch[] getChunk(){
+        return ;
+    }
     // when processed++ will not cause damage if isCompleted
     public boolean isCompleted(){
         return processed >= size;
     }
 }
+

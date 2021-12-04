@@ -11,27 +11,34 @@ public class GPU {
      */
     enum Type {RTX3090, RTX2080, GTX1080}
     private Type type;
+    private Cluster theCluster;
+    private Data unprocessedData;
     private DataBatch[] VRAM;
     private boolean isProcessing;
-    public GPU(){
+
+    public GPU(Cluster theCluster, Type type){
+        this.type = type;
+        this.theCluster = theCluster;
         isProcessing = false;
         // define the gpu
     }
     public synchronized void initProcess(Data data){
+        this.unprocessedData = data;
         isProcessing = true;
         // get Data, and start processing it
         // pass down to cluster
     }
     // process one tick (to train the model)
     public synchronized void processTick() {
+        //
+    }
+    // check if VRAM need's refill
+    private boolean checkVRAM(){
 
     }
-    // private - check and refill VRAM
-    private boolean checkVRAM(){
-        // check if VRAM has any more data left in VRAM
-    }
+    // if VRAM is empty (or close to it) then refill it
     private boolean fillVRAM(){
-        // if VRAM is empty (or close to it) then refill it
+
     }
 
 

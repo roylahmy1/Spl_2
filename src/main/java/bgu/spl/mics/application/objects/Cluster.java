@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.objects;
 
 
+import java.util.Map;
+import java.util.Queue;
+
 /**
  * Passive object representing the cluster.
  * <p>
@@ -8,7 +11,7 @@ package bgu.spl.mics.application.objects;
  * Add all the fields described in the assignment as private fields.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
-public class Cluster {
+public class Cluster<object> {
 
 	/**
      * Retrieves the single instance of this class.
@@ -21,14 +24,53 @@ public class Cluster {
 	 array of GPU'S
 	 array of CPU's
 
-	 unprocessed queue of data (belongs to a GPU) - unlimited
+	 // every request from the cpu for data will loop in round-robin mannar
+	 unprocessed list of data (belongs to a GPU) - unlimited
+	 int (Atomic - maybe?)
+	 CPU - will have cache
+
 	 processed queue of data (belongs to a GPU) -- limited
 
-	 unprocessed queue of data  (for one CPU) -- unlimited
+	 task queue - unprocessed queue of data  (for one CPU) -- unlimited
 
 	 //
 
 	 */
+
+	GPU[] gpuArray;
+	CPU[] cpuArray;
+
+	Map<Integer, Data> unprocessedDataSets;
+	int unprocessedIndex;
+	object unprocessedIndexLock;
+	Map<Integer, Queue<Data>> processedDataSets;
+
+	// GPU stores unprocessed data
+	public synchronized void storeUnprocessedData(Data data, Integer gpuIndex) {
+		unprocessedDataSets.put(gpuIndex, data);
+	}
+	// CPU get data in chunks (according to need) of DB
+	public DataBatch[] getUnprocessedData() {
+		// decide how much data a CPU should get
+		// loop unprocessedDataSets
+		DataBatch[] chunk = unprocessedDataSets.get(unprocessedIndex).getChunk();
+		synchronized (unprocessedIndexLock){
+			unprocessedIndex++;
+		}
+		return chunk;
+	}
+	// CPU stores DB set
+	public void storeProcessedData() {
+		//
+
+	}
+	// GPU get DB set
+	public void getProcessedData() {
+		//
+
+	}
+
+
 
 
 	public static Cluster getInstance() {
