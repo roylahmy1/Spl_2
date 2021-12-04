@@ -1,8 +1,12 @@
 package bgu.spl.mics.application.objects;
 
 
-import java.util.Map;
-import java.util.Queue;
+import bgu.spl.mics.Message;
+import bgu.spl.mics.MessageBus;
+import bgu.spl.mics.MessageBusImpl;
+import bgu.spl.mics.MicroService;
+
+import java.util.*;
 
 /**
  * Passive object representing the cluster.
@@ -11,71 +15,90 @@ import java.util.Queue;
  * Add all the fields described in the assignment as private fields.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
-public class Cluster<object> {
+public class Cluster {
 
 	/**
+	 * @INV:
      * Retrieves the single instance of this class.
      * @PRE: none
      * @POST: none
      */
 
+
+	private static Cluster singletonInstance = new Cluster();
+
+	LinkedList<GPU> gpuList;
+	LinkedList<CPU> cpuList;
+	//
+	private int unprocessedIndex;
+	private Object unprocessedIndexLock = new Object();
+	private Map<GPU, Data> unprocessedDataSets;
+	private Map<GPU, DatabatchQueue> processedDataSets;
+
+
+	private Cluster() {
+		gpuList = new LinkedList<GPU>();
+		cpuList = new LinkedList<CPU>();
+		//
+		Map<GPU, Data> unprocessedDataSets;
+		Map<GPU, DatabatchQueue> processedDataSets;
+
+	}
+	public synchronized void insertGpu(GPU gpu){
+		gpuList.add(gpu);
+		unprocessedDataSets.put(gpu, null);
+		processedDataSets.put(gpu, null);
+	}
+	public synchronized void insertCpu(CPU cpu){
+		cpuList.add(cpu);
+	}
+
+
 	/**
-	 --- SINGLETON ---
-	 array of GPU'S
-	 array of CPU's
-
-	 // every request from the cpu for data will loop in round-robin mannar
-	 unprocessed list of data (belongs to a GPU) - unlimited
-	 int (Atomic - maybe?)
-	 CPU - will have cache
-
-	 processed queue of data (belongs to a GPU) -- limited
-
-	 task queue - unprocessed queue of data  (for one CPU) -- unlimited
-
-	 //
-
+	 * Retrieves the singleton instance
 	 */
+	public static Cluster getInstance() {
+		return singletonInstance;
+	}
 
-	GPU[] gpuArray;
-	CPU[] cpuArray;
-
-	Map<Integer, Data> unprocessedDataSets;
-	int unprocessedIndex;
-	object unprocessedIndexLock;
-	Map<Integer, Queue<Data>> processedDataSets;
 
 	// GPU stores unprocessed data
-	public synchronized void storeUnprocessedData(Data data, Integer gpuIndex) {
-		unprocessedDataSets.put(gpuIndex, data);
+	public void storeUnprocessedData(Data data, GPU gpu) {
+		synchronized (unprocessedIndexLock) {
+			unprocessedIndex = 0;
+			unprocessedDataSets.put(gpu, data);
+		}
 	}
 	// CPU get data in chunks (according to need) of DB
-	public DataBatch[] getUnprocessedData() {
+	public Chunk getUnprocessedData() {
 		// decide how much data a CPU should get
-		// loop unprocessedDataSets
-		DataBatch[] chunk = unprocessedDataSets.get(unprocessedIndex).getChunk();
+		Chunk chunk = unprocessedDataSets.get(unprocessedIndex).getChunk(16);
 		synchronized (unprocessedIndexLock){
-			unprocessedIndex++;
+			unprocessedIndex = unprocessedIndex % unprocessedDataSets.size();
 		}
 		return chunk;
 	}
 	// CPU stores DB set
-	public void storeProcessedData() {
+	public void storeProcessedData(DataBatch db) {
 		//
-
+		processedDataSets.get(db.getContainer()).add(db);
 	}
 	// GPU get DB set
-	public void getProcessedData() {
+	public DatabatchQueue getProcessedData(GPU gpu, int count) {
 		//
+		DatabatchQueue gpuQueue = processedDataSets.get(gpu);
+		DatabatchQueue resultQueue = new DatabatchQueue();
 
-	}
-
-
-
-
-	public static Cluster getInstance() {
-		//TODO: Implement this
-		return null;
+		//
+		DataBatch db = gpuQueue.pop();
+		while (count > 0 && db != null){
+			resultQueue.add(db);
+			count--;
+			// pull the next element, if null will check at next loop
+			db = gpuQueue.pop();
+		}
+		//
+		return resultQueue;
 	}
 
 }

@@ -22,9 +22,35 @@ public class Model {
     private Student student;
     private Results results;
     private Status status;
+    private int Trained;
 
     public Model(){
         status = Status.PreTrained;
         results = Results.None;
+        Trained = 0;
+    }
+
+    public synchronized Status getStatus() {
+        return status;
+    }
+
+    public synchronized void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public synchronized Results getResults() {
+        return results;
+    }
+
+    public synchronized void setResults(Results results) {
+        this.results = results;
+    }
+
+    public Data getData() {
+        return data;
+    }
+
+    public synchronized void increaseTrained() {
+        Trained++;
     }
 }

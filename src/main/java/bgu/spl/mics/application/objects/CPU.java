@@ -10,7 +10,7 @@ import java.util.Queue;
 public class CPU {
 
     private int cores;
-    private Queue<DataBatch> unprocessedData;
+    private Chunk unprocessedData;
     private Cluster theCluster;
 
     public CPU(int cores) {
@@ -22,10 +22,6 @@ public class CPU {
     }
     // get a DB set from the cluster
     private void getChunk(){
-
-    }
-    // send DB set to the cluster
-    private void sendChunk(){
 
     }
 }

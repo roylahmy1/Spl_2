@@ -84,7 +84,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public void register(MicroService m) {
-		Map<, MicroService>
+//		Map<, MicroService>
 
 	}
 

@@ -12,45 +12,51 @@ public class GPU {
     enum Type {RTX3090, RTX2080, GTX1080}
     private Type type;
     private Cluster theCluster;
-    private Data unprocessedData;
-    private DataBatch[] VRAM;
-    private boolean isProcessing;
+    private Model model;
+    private DatabatchQueue VRAM;
+    private final int VRAMSize = 16;
 
     public GPU(Cluster theCluster, Type type){
         this.type = type;
         this.theCluster = theCluster;
-        isProcessing = false;
         // define the gpu
     }
-    public synchronized void initProcess(Data data){
-        this.unprocessedData = data;
-        isProcessing = true;
+    public synchronized void initProcess(Model model){
+        this.model = model;
+
+        if (model.getStatus() == Model.Status.PreTrained){
+            Cluster.getInstance().storeUnprocessedData(model.getData(), this);
+            model.setStatus(Model.Status.Training);
+        }
         // get Data, and start processing it
         // pass down to cluster
     }
     // process one tick (to train the model)
     public synchronized void processTick() {
         //
+
+        if (model.getStatus() == Model.Status.Training){
+            //
+        }
+        if (model.getStatus() == Model.Status.Trained){
+            // return random odds of success
+        }
     }
     // check if VRAM need's refill
     private boolean checkVRAM(){
-
+        return VRAM.isEmpty();
     }
     // if VRAM is empty (or close to it) then refill it
-    private boolean fillVRAM(){
-
+    private void fillVRAM(){
+        VRAM = Cluster.getInstance().getProcessedData(this, VRAMSize);
     }
 
 
-    public synchronized boolean isComplete(){
-
-    }
-    // after the
-    public synchronized Data getCompleteProcess(){
-
+    public synchronized Model.Status getStatus(){
+        return model.getStatus();
     }
     public synchronized void clean(){
-
+        this.model = null;
     }
 
 }
