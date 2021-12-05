@@ -33,6 +33,7 @@ class CPUTest {
 
         gpu1 = new GPU(Cluster.getInstance(), GPU.Type.GTX1080);
         gpu2 = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
+        gpu3 = new GPU(Cluster.getInstance(), GPU.Type.RTX3090);
     }
 
     @Test
@@ -49,8 +50,8 @@ class CPUTest {
     void runThreadedCPU() throws InterruptedException {
         // like the sequential run, but we make sure no shared memory problems
         Cluster.getInstance().storeUnprocessedData(data1, gpu1);
-        Cluster.getInstance().storeUnprocessedData(data2, gpu1);
-        Cluster.getInstance().storeUnprocessedData(data3, gpu2);
+        Cluster.getInstance().storeUnprocessedData(data2, gpu2);
+        Cluster.getInstance().storeUnprocessedData(data3, gpu3);
 
         Thread run1 = new Thread(new Runnable() {
             public void run() {
@@ -85,8 +86,10 @@ class CPUTest {
         // at the end there should be exactly the expected size
         DatabatchQueue databatchQueue1 = Cluster.getInstance().getProcessedData(gpu1, 1000); //
         DatabatchQueue databatchQueue2 = Cluster.getInstance().getProcessedData(gpu2, 1000); //
-        assertEquals(databatchQueue1.size(), 10 + 25);
-        assertEquals(databatchQueue2.size(), 50);
+        DatabatchQueue databatchQueue3 = Cluster.getInstance().getProcessedData(gpu3, 1000); //
+        assertEquals(databatchQueue1.size(), 10);
+        assertEquals(databatchQueue2.size(), 25);
+        assertEquals(databatchQueue3.size(), 50);
     }
 
     private void runCPUTest(CPU cpu, GPU gpu, Data data, int expectedTicks, int expectedSize) {
@@ -118,7 +121,7 @@ class CPUTest {
 
     @Test
     void checkAndUpdateChunk() {
-        Cluster.getInstance().storeUnprocessedData(data1, gpu);
+        Cluster.getInstance().storeUnprocessedData(data1, gpu1);
 
         // should take (32 / 32) * 4 ticks = 4 ticks per batch.
 

@@ -17,7 +17,9 @@ public class CPUService extends MicroService {
         // Wait for event in loop
             // if event is tick
                 // check Chunk
-                    // if no chunk, continue to next event
+                    // if no chunk, updateChunk
+                        // check chunk again
+                        // if again null then finish loop
                     // else, process tick
     }
 

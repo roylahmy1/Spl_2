@@ -49,15 +49,14 @@ class MessageBusImplTest {
 
         // check CPU get event
         try {
-            assertEquals(messageBus.awaitMessage(cpuService), testEvent,"not equal events");
+            assertEquals(messageBus.awaitMessage(cpuService), testEvent);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
         // check GPU not get event
         try {
-            assertNull(messageBus.awaitMessage(gpuService),
-                    "is not subscribed");
+            assertNull(messageBus.awaitMessage(gpuService));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -104,8 +103,13 @@ class MessageBusImplTest {
     }
 
     @Test
-    void complete() {
-
+    void complete() throws InterruptedException {
+        final String val = "asdasd";
+        messageBus.subscribeEvent(testEvent.getClass(), cpuService);
+        Future<String> future = messageBus.sendEvent(testEvent);
+        messageBus.complete(testEvent, val);
+        assertEquals(future.get(), val);
+        assertTrue(future.isDone());
     }
 
     @Test

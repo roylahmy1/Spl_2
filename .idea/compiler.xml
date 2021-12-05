@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="Spl_2" />
         <module name="Spl_Ass_2" />
+        <module name="spl2" />
       </profile>
     </annotationProcessing>
   </component>

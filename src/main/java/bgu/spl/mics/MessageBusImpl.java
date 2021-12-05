@@ -36,12 +36,15 @@ public class MessageBusImpl implements MessageBus {
 
 	HashMap<Class<? extends Message>, Subscription> Subscriptions;
 	HashMap<MicroService, Queue<MicroService>> registeredServices;
+	// hold events to the future they sent
+	private HashMap<Event<?>, Future<?>> futures;
 
 	private static MessageBusImpl singletonInstance = new MessageBusImpl();
 
 	private MessageBusImpl() {
 		Subscriptions = new HashMap<Class<? extends Message>, Subscription>();
 		registeredServices = new HashMap<MicroService, Queue<MicroService>>();
+		futures = new HashMap<Event<?>, Future<?>>();
 	}
 
 	/**

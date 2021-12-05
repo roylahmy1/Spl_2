@@ -14,6 +14,11 @@ public class CPU {
     private int chunkIndex;
     private Cluster theCluster;
 
+    /**
+     * @INV:
+     * theCluster != null
+     */
+
     public CPU(int cores, Cluster theCluster) {
         this.cores = cores;
         this.theCluster = theCluster;
@@ -21,12 +26,20 @@ public class CPU {
     }
     /**
      process 1 tick in the CPU
+     * @PRE:
+     * checkChunk() == true
+     * @POST:
+     * none
      */
     public synchronized void processTick(){
         // process DB and update cluster accordingly
     }
     /**
      get a DB chunk of unprocessed data from the cluster
+     * @PRE:
+     * none
+     * @POST:
+     * none
      */
     public void updateChunk(){
 

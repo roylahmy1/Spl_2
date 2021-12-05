@@ -28,18 +28,12 @@ class GPUTest {
     }
 
     @Test
-    void initProcess() {
+    void TrainModel() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
-        gpu.initProcess(model1);
+        gpu.TrainModel(model1);
         //
         assertEquals(gpu.getStatus(), Model.Status.Training);
-        //
-        gpu.clean();
-        model2.setStatus(Model.Status.Trained);
-        gpu.initProcess(model2);
-        assertEquals(gpu.getStatus(), Model.Status.Tested);
     }
-
     @Test
     void gpuRun() {
         // run tests on all gpu's with 2 type's of data
@@ -117,7 +111,7 @@ class GPUTest {
     }
 
     private void gpuRunRegularSize(GPU gpu, Model model, int expectedIterations) {
-        gpu.initProcess(model);
+        gpu.TrainModel(model);
 
         // ASSUME THIS PART IS WORKING
         // let us assume Cpu finished processing
@@ -132,17 +126,21 @@ class GPUTest {
         gpu.fillVRAM(); // should fill the VRAM without any left
         //
         for (int i = 0; i < expectedIterations; i++){
-            assertFalse(gpu.checkVRAM());
+            assertTrue(gpu.checkVRAM());
             gpu.processTick();
         }
-        assertTrue(gpu.checkVRAM());
+        assertFalse(gpu.checkVRAM());
         assertTrue(gpu.isCompleted());
         //
         gpu.clean();
         assertNull(gpu.getModel());
     }
     private void gpuRunDoubleSize(GPU gpu, Model model, int expectedIterations) {
-        gpu.initProcess(model);
+        gpu.TrainModel(model);
+
+        //
+        // check VRAM isn't taking more then it should
+        //
 
         // ASSUME THIS PART IS WORKING
         // let us assume Cpu finished processing
@@ -176,7 +174,7 @@ class GPUTest {
     @Test
     void getStatus() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
-        gpu.initProcess(model1);
+        gpu.TrainModel(model1);
         //
         assertEquals(gpu.getStatus(), Model.Status.Training);
         //
@@ -187,7 +185,7 @@ class GPUTest {
     @Test
     void clean() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
-        gpu.initProcess(model1);
+        gpu.TrainModel(model1);
         gpu.clean();
 
         assertNull(gpu.getModel());

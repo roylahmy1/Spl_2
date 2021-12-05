@@ -36,11 +36,11 @@ public class GPU {
 
     /**
      * @PRE:
-     * model == null
+     * model.getStatus() == Model.Status.PreTrained
      * @POST:
-     * model != null
+     * getModel() != null
      */
-    public synchronized void initProcess(Model model){
+    public synchronized void TrainModel(Model model){
         this.model = model;
 
         if (model.getStatus() == Model.Status.PreTrained){
@@ -51,6 +51,12 @@ public class GPU {
         // pass down to cluster
     }
     // process one tick (to train the model)
+    /**
+     * @PRE:
+     * checkVRAM() == true
+     * @POST:
+     * none
+     */
     public synchronized void processTick() {
         //
     }
@@ -66,14 +72,27 @@ public class GPU {
     public synchronized boolean isCompleted() {
         //return true;
     }
-    // test the model
+    /**
+     * @PRE:
+     * model.getStatus() == Model.Status.Trained
+     * @POST:
+     * model.getStatus() == Model.Status.Tested
+     */
     public synchronized void testModel(Model model) {
         //
     }
 
+    // get current model status
     public synchronized Model.Status getStatus(){
         return model.getStatus();
     }
+
+    /**
+     * @PRE:
+     * none
+     * @POST:
+     * getModel() == null
+     */
     public synchronized void clean(){
         this.model = null;
     }

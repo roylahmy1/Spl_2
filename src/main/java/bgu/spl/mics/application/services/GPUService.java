@@ -17,16 +17,18 @@ public class GPUService extends MicroService {
         super("Change_This_Name");
         // TODO Implement this
 
+        // Queue - ONLY events
+
         // Wait for event in loop
             // if event is tick
                 // check VRAM
                     // if empty try filling
                         // check is empty again
-                            // if still empty check is completed, and resolve training event
+                            // if still empty check is completed, and resolve training event and clean, and pull next event
                             // else just continue for next event
                     // process tick
-            // if start training model, call init train
-            // if test, call test
+            // if start training model, call init train if empty, else push to queue
+            // if test, call test if empty, else push to queue
 
 
     }

@@ -51,7 +51,7 @@ class FutureTest {
     @Test
     void isDone() {
         assertFalse(future.isDone());
-        future.resolve(1221);
+        future.resolve(1234);
         assertTrue(future.isDone());
     }
 
@@ -94,7 +94,7 @@ class FutureTest {
         });
         runTest2.start();
         try {
-            Thread.sleep(2*1000);
+            Thread.sleep(5*1000);
             assertFalse(runTest2.isAlive());
         } catch (InterruptedException e) {
             e.printStackTrace();

@@ -45,6 +45,8 @@ public class Future<T> {
 	
 	/**
      * Resolves the result of this Future object.
+	 * @PRE: none
+	 * @POST: isDone() == true
      */
 	public synchronized void resolve (T result) {
 		this.result = result;
