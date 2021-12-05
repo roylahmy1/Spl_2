@@ -1,12 +1,9 @@
 package bgu.spl.mics.application.objects;
 
-import bgu.spl.mics.Broadcast;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import junit.framework.TestCase;
 
-class CPUTest {
+public class CPUTest extends TestCase {
 
     private Data data1;
     private Data data2;
@@ -21,8 +18,9 @@ class CPUTest {
     private GPU gpu2;
     private GPU gpu3;
 
-    @BeforeEach
-    void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
+
         data1 = new Data(10000, Data.Type.Images);
         data2 = new Data(25000, Data.Type.Tabular);
         data3 = new Data(50000, Data.Type.Text);
@@ -36,8 +34,7 @@ class CPUTest {
         gpu3 = new GPU(Cluster.getInstance(), GPU.Type.RTX3090);
     }
 
-    @Test
-    void runCPU(){
+    public void testRunCPU(){
         // should take (32 / 32) * 4 ticks = 4 ticks per batch.
         runCPUTest(cpu1, gpu1, data1, 4 * 10, 10);
         // should take (32 / 16) * 2 ticks = 4 ticks per batch.
@@ -46,8 +43,7 @@ class CPUTest {
         runCPUTest(cpu3, gpu3, data3, 4 * 50, 50);
     }
 
-    @Test
-    void runThreadedCPU() throws InterruptedException {
+    public void testRunThreadedCPU() throws InterruptedException {
         // like the sequential run, but we make sure no shared memory problems
         Cluster.getInstance().storeUnprocessedData(data1, gpu1);
         Cluster.getInstance().storeUnprocessedData(data2, gpu2);
@@ -119,8 +115,7 @@ class CPUTest {
         }
     }
 
-    @Test
-    void checkAndUpdateChunk() {
+    public void testCheckAndUpdateChunk() {
         Cluster.getInstance().storeUnprocessedData(data1, gpu1);
 
         // should take (32 / 32) * 4 ticks = 4 ticks per batch.

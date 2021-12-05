@@ -1,12 +1,9 @@
 package bgu.spl.mics.application.objects;
 
 import bgu.spl.mics.Future;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import junit.framework.TestCase;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-class GPUTest {
+public class GPUTest extends TestCase {
 
     private Data data1;
     private Data data2 ;
@@ -17,8 +14,9 @@ class GPUTest {
     private Model model2;
     private Model modelSmall;
 
-    @BeforeEach
-    void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
+
         data1 = new Data(100000, Data.Type.Images);
         data2 = new Data(50000, Data.Type.Tabular);
         student = new Student("roy","CS", Student.Degree.MSc);
@@ -27,16 +25,14 @@ class GPUTest {
         model2 = new Model("roy's model 2", data2, student);
     }
 
-    @Test
-    void TrainModel() {
+    public void testTrainModel() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
         gpu.TrainModel(model1);
         //
         assertEquals(gpu.getStatus(), Model.Status.Training);
         assertNotNull(gpu.getModel());
     }
-    @Test
-    void gpuRun() {
+    public void testGpuRun() {
         // run tests on all gpu's with 2 type's of data
         // first run when data is exactly the size of the gpu VRAM
         // second run when data is exactly twice the size of the gpu VRAM
@@ -45,8 +41,7 @@ class GPUTest {
         gpuRunRTX2080();
         gpuRunGTX1080();
     }
-    @Test
-    void gpuThreadedRun() {
+    public void testGpuThreadedRun() {
         // run tests on all gpu's with 2 type's of data
         // first run when data is exactly the size of the gpu VRAM
         // second run when data is exactly twice the size of the gpu VRAM
@@ -71,8 +66,7 @@ class GPUTest {
         run3.start();
     }
 
-    @Test
-    void gpuRunRTX3090() {
+    public void gpuRunRTX3090() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX3090);
         final int expectedIterations = 32 * 1; // 1 for 3090
 
@@ -84,8 +78,7 @@ class GPUTest {
         modelRTX3090 = new Model("RTX3090", dataRTX3090, student);
         gpuRunDoubleSize(gpu, modelRTX3090, expectedIterations);
     }
-    @Test
-    void gpuRunRTX2080() {
+    public void gpuRunRTX2080() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
         final int expectedIterations = 16 * 2; // 2 for 2080
 
@@ -97,8 +90,7 @@ class GPUTest {
         modelRTX2080 = new Model("TX2080", dataRTX2080, student);
         gpuRunDoubleSize(gpu, modelRTX2080, expectedIterations);
     }
-    @Test
-    void gpuRunGTX1080() {
+    public void gpuRunGTX1080() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.GTX1080);
         final int expectedIterations = 8 * 4; // 4 for 1080
 
@@ -172,8 +164,7 @@ class GPUTest {
         assertNull(gpu.getModel());
     }
 
-    @Test
-    void getStatus() {
+    public void testGetStatus() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
         gpu.TrainModel(model1);
         //
@@ -183,8 +174,7 @@ class GPUTest {
         assertEquals(gpu.getStatus(), Model.Status.Tested);
     }
 
-    @Test
-    void clean() {
+    public void testClean() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
         gpu.TrainModel(model1);
         gpu.clean();
@@ -192,13 +182,12 @@ class GPUTest {
         assertNull(gpu.getModel());
     }
 
-    @Test
-    void testModel() {
+    public void testModel() {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.RTX2080);
         model1.setStatus(Model.Status.Trained);
         gpu.testModel(model1);
         assertEquals(model1.getStatus(), Model.Status.Tested);
-        assertNotEquals(model1.getResults(), Model.Results.None);
+        assertNotSame(model1.getResults(), Model.Results.None);
         assertNotNull(gpu.getModel());
     }
 }

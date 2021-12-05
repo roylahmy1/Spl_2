@@ -1,28 +1,22 @@
 package bgu.spl.mics;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
+import junit.framework.TestCase;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-class FutureTest {
+public class FutureTest extends TestCase {
 
     Future<Integer> future;
-    @BeforeEach
-    void setUp() {
+    public void setUp() throws Exception {
+        super.setUp();
         future = new Future<>();
     }
 
-    @Test
-    void getAndResolve() {
+    public void testGetAndResolve() {
         // check if the future can wait for proper results
         Thread reader = new Thread(new Runnable() {
             @Override
             public void run() {
-                Integer result = 0;
+                int result = 0;
                 try {
                     result = future.get();
                 } catch (InterruptedException e) {
@@ -48,20 +42,18 @@ class FutureTest {
         writer.start();
     }
 
-    @Test
-    void isDone() {
+    public void testIsDone() {
         assertFalse(future.isDone());
         future.resolve(1234);
         assertTrue(future.isDone());
     }
 
-    @Test
-    void getAndResolve2() {
+    public void testGetAndResolve2() {
         // check that after X time the thread dies due to being unresolved
         Thread reader = new Thread(new Runnable() {
             @Override
             public void run() {
-                Integer result = 0;
+                int result = 0;
                 result = future.get(2, TimeUnit.SECONDS);
                 assertEquals(result, 1234);
             }
@@ -83,8 +75,8 @@ class FutureTest {
         writer.start();
 
     }
-    @Test
-    void getAndResolve2IsAlive() {
+
+    public void testGetAndResolve2IsAlive() {
         // check that after X time the thread dies due to being unresolved
         Thread runTest2 = new Thread(new Runnable() {
             @Override

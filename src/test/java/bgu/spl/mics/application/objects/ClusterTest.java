@@ -1,36 +1,25 @@
 package bgu.spl.mics.application.objects;
 
-import org.junit.jupiter.api.Test;
+import junit.framework.TestCase;
 
-import static org.junit.jupiter.api.Assertions.*;
+public class ClusterTest extends TestCase {
 
-class ClusterTest {
-
-    @Test
-    void insertGpu() {
+    public void setUp() throws Exception {
+        super.setUp();
     }
 
-    @Test
-    void insertCpu() {
+    public void testInsertGpu() {
     }
 
-    @Test
-    void getInstance() {
+    public void testInsertCpu() {
     }
 
-    @Test
-    void storeUnprocessedData() {
+    public void testGetInstance() {
     }
 
-    @Test
-    void getUnprocessedData() {
+    public void testStoreUnprocessedData() {
     }
 
-    @Test
-    void storeProcessedData() {
-    }
-
-    @Test
-    void getProcessedData() {
+    public void testGetUnprocessedData() {
     }
 }

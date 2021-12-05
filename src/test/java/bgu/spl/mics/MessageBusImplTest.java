@@ -8,12 +8,9 @@ import bgu.spl.mics.example.messages.ExampleEvent;
 import bgu.spl.mics.example.services.ExampleBroadcastListenerService;
 import bgu.spl.mics.example.services.ExampleEventHandlerService;
 import bgu.spl.mics.example.services.ExampleMessageSenderService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import junit.framework.TestCase;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-class MessageBusImplTest {
+public class MessageBusImplTest extends TestCase {
 
     MessageBus messageBus;
     TickBroadcast tickBroadcast;
@@ -22,8 +19,9 @@ class MessageBusImplTest {
     ExampleEvent testEvent;
     ExampleBroadcast testBroadcast;
 
-    @BeforeEach
-    public void setUp(){
+    public void setUp() throws Exception {
+        super.setUp();
+
         messageBus = MessageBusImpl.getInstance();
         CPUService cpuService = new CPUService("Cpu 1");
         GPUService gpuService = new GPUService("Gpu 1");
@@ -34,15 +32,13 @@ class MessageBusImplTest {
         messageBus.register(cpuService);
     }
 
-    @Test
-    void getInstance() {
+    public void testGetInstance() {
         MessageBusImpl msg1 = (MessageBusImpl) MessageBusImpl.getInstance();
         MessageBusImpl msg2 = (MessageBusImpl) MessageBusImpl.getInstance();
-        assertSame(msg1, msg2, "should be the same");
+        assertEquals(msg1, msg2);
     }
 
-    @Test
-    void subscribeAndSendEvent() {
+    public void testSubscribeAndSendEvent() {
         // Subscribe our test Event and end test
         messageBus.subscribeEvent(testEvent.getClass(), cpuService);
         messageBus.sendEvent(testEvent);
@@ -62,8 +58,7 @@ class MessageBusImplTest {
         }
     }
 
-    @Test
-    void subscribeAndSendBroadcast() {
+    public void testSubscribeAndSendBroadcast() {
         // check a thread can get broadcast event from other threads
         Thread run1 = new Thread(new Runnable() {
             public void run() {
@@ -102,8 +97,7 @@ class MessageBusImplTest {
         sender.start();
     }
 
-    @Test
-    void complete() throws InterruptedException {
+    public void testComplete() throws InterruptedException {
         final String val = "asdasd";
         messageBus.subscribeEvent(testEvent.getClass(), cpuService);
         Future<String> future = messageBus.sendEvent(testEvent);
@@ -112,8 +106,7 @@ class MessageBusImplTest {
         assertTrue(future.isDone());
     }
 
-    @Test
-    void unregister() {
+    public void testUnregister() {
         // check unregister
         messageBus.register(cpuService);
         messageBus.unregister(cpuService);
