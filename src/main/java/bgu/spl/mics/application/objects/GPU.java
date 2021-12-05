@@ -36,8 +36,9 @@ public class GPU {
 
     /**
      * @PRE:
-     * model.getStatus() == Model.Status.PreTrained
+     * getModel().getStatus() == Model.Status.PreTrained
      * @POST:
+     * getModel().getStatus() == Model.Status.Training
      * getModel() != null
      */
     public synchronized void TrainModel(Model model){
@@ -75,9 +76,11 @@ public class GPU {
     }
     /**
      * @PRE:
-     * model.getStatus() == Model.Status.Trained
+     * getModel().getStatus() == Model.Status.Trained
      * @POST:
-     * model.getStatus() == Model.Status.Tested
+     * getModel() != null
+     * getModel().getStatus() == Model.Status.Tested
+     * getModel().getResults() != Model.Results.None
      */
     public synchronized void testModel(Model model) {
         //
