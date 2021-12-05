@@ -33,6 +33,7 @@ class GPUTest {
         gpu.TrainModel(model1);
         //
         assertEquals(gpu.getStatus(), Model.Status.Training);
+        assertNotNull(gpu.getModel());
     }
     @Test
     void gpuRun() {
@@ -198,5 +199,6 @@ class GPUTest {
         gpu.testModel(model1);
         assertEquals(model1.getStatus(), Model.Status.Tested);
         assertNotEquals(model1.getResults(), Model.Results.None);
+        assertNotNull(gpu.getModel());
     }
 }
