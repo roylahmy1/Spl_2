@@ -71,6 +71,7 @@ public class GPU {
 
     public synchronized boolean isCompleted() {
         //return true;
+        throw new UnsupportedOperationException();
     }
     /**
      * @PRE:
