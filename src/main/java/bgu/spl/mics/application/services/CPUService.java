@@ -13,6 +13,12 @@ public class CPUService extends MicroService {
     public CPUService(String name) {
         super("Change_This_Name");
         // TODO Implement this
+
+        // Wait for event in loop
+            // if event is tick
+                // check Chunk
+                    // if no chunk, continue to next event
+                    // else, process tick
     }
 
     @Override

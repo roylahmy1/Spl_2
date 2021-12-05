@@ -14,24 +14,31 @@ public class GPU {
     private Cluster theCluster;
     private Model model;
     private DatabatchQueue VRAM;
-    private final int VRAMSize = 16;
+    private int VRAMSize;
 
     /**
      * @INV:
-     * model != null
+     * theCluster != null
      */
 
     public GPU(Cluster theCluster, Type type){
         this.type = type;
         this.theCluster = theCluster;
-        // define the gpu
+        theCluster.insertGpu(this);
+
+        if (type == Type.GTX1080)
+            VRAMSize = 8;
+        if (type == Type.RTX2080)
+            VRAMSize = 16;
+        if (type == Type.RTX3090)
+            VRAMSize = 32;
     }
 
     /**
      * @PRE:
      * model == null
      * @POST:
-     *
+     * model != null
      */
     public synchronized void initProcess(Model model){
         this.model = model;
@@ -46,24 +53,23 @@ public class GPU {
     // process one tick (to train the model)
     public synchronized void processTick() {
         //
-
-        if (model.getStatus() == Model.Status.Training){
-            //
-        }
-        if (model.getStatus() == Model.Status.Trained){
-            // return random odds of success
-        }
     }
     // check if VRAM need's refill
-    public boolean checkVRAM(){
+    public synchronized boolean checkVRAM(){
         return VRAM.isEmpty();
     }
     // if VRAM is empty (or close to it) then refill it
-    public void fillVRAM(){
+    public synchronized void fillVRAM(){
         VRAM = Cluster.getInstance().getProcessedData(this, VRAMSize);
     }
 
-    public boolean isCompleted
+    public synchronized boolean isCompleted() {
+        //return true;
+    }
+    // test the model
+    public synchronized void testModel(Model model) {
+        //
+    }
 
     public synchronized Model.Status getStatus(){
         return model.getStatus();

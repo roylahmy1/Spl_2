@@ -46,6 +46,15 @@ public class Data {
             return chunk;
         }
     }
+
+    public DataBatch[] getDataBatches() {
+        return dataBatches;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
     // when processed++ will not cause damage if isCompleted
     public boolean isCompleted(){
         return processed >= size;

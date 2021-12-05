@@ -16,6 +16,19 @@ public class GPUService extends MicroService {
     public GPUService(String name) {
         super("Change_This_Name");
         // TODO Implement this
+
+        // Wait for event in loop
+            // if event is tick
+                // check VRAM
+                    // if empty try filling
+                        // check is empty again
+                            // if still empty check is completed, and resolve training event
+                            // else just continue for next event
+                    // process tick
+            // if start training model, call init train
+            // if test, call test
+
+
     }
 
     @Override

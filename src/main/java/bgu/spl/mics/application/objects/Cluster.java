@@ -68,20 +68,33 @@ public class Cluster {
 			unprocessedIndex = 0;
 			unprocessedDataSets.put(gpu, data);
 		}
+		// ??? maybe ???
+		///
+		// should NOT notify if data added
+		///
 	}
 	// CPU get data in chunks (according to need) of DB
 	public Chunk getUnprocessedData() {
 		// decide how much data a CPU should get
-		Chunk chunk = unprocessedDataSets.get(unprocessedIndex).getChunk(16);
 		synchronized (unprocessedIndexLock){
+			Chunk chunk = unprocessedDataSets.get(unprocessedIndex).getChunk(16);
 			unprocessedIndex = unprocessedIndex % unprocessedDataSets.size();
+			return chunk;
 		}
-		return chunk;
+		// ??? maybe ???
+		///
+		// should NOT await if no data exists
+		///
 	}
 	// CPU stores DB set
 	public void storeProcessedData(DataBatch db) {
 		//
 		processedDataSets.get(db.getContainer()).add(db);
+
+		// ??? maybe ???
+		///
+		// should NOT notify if data added
+		///
 	}
 	// GPU get DB set
 	public DatabatchQueue getProcessedData(GPU gpu, int count) {
@@ -89,7 +102,11 @@ public class Cluster {
 		DatabatchQueue gpuQueue = processedDataSets.get(gpu);
 		DatabatchQueue resultQueue = new DatabatchQueue();
 
-		//
+		// ??? maybe ???
+		///
+		// should NOT await if no data exists
+		///
+
 		DataBatch db = gpuQueue.pop();
 		while (count > 0 && db != null){
 			resultQueue.add(db);
