@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Random;
+
 /**
  * Passive object representing a single GPU.
  * Add all the fields described in the assignment as private fields.
@@ -15,6 +17,10 @@ public class GPU {
     private Model model;
     private DatabatchQueue VRAM;
     private int VRAMSize;
+    //
+    private int ticksPerDataBatch;
+    private DataBatch currentDataBatch;
+    private int currentProgress = 0;
 
     /**
      * @INV:
@@ -26,12 +32,18 @@ public class GPU {
         this.theCluster = theCluster;
         theCluster.insertGpu(this);
 
-        if (type == Type.GTX1080)
+        if (type == Type.GTX1080) {
             VRAMSize = 8;
-        if (type == Type.RTX2080)
+            ticksPerDataBatch = 4;
+        }
+        if (type == Type.RTX2080) {
             VRAMSize = 16;
-        if (type == Type.RTX3090)
+            ticksPerDataBatch = 2;
+        }
+        if (type == Type.RTX3090) {
             VRAMSize = 32;
+            ticksPerDataBatch = 1;
+        }
     }
 
     /**
@@ -44,22 +56,35 @@ public class GPU {
     public synchronized void TrainModel(Model model){
         this.model = model;
 
+        // get Data, and start processing it
+        // pass down to cluster
         if (model.getStatus() == Model.Status.PreTrained){
             Cluster.getInstance().storeUnprocessedData(model.getData(), this);
             model.setStatus(Model.Status.Training);
         }
-        // get Data, and start processing it
-        // pass down to cluster
     }
-    // process one tick (to train the model)
     /**
+     * process one tick (to train the model)
      * @PRE:
+     * model != null
      * checkVRAM() == true
      * @POST:
      * none
      */
     public synchronized void processTick() {
         //
+        if (currentDataBatch != null)
+            currentProgress++;
+
+        //
+        if (currentProgress >= ticksPerDataBatch){
+            if (currentDataBatch != null) {
+                model.increaseTrained();
+            }
+            currentDataBatch = VRAM.pop();
+            currentProgress = 0;
+        }
+
     }
     // check if VRAM need's refill
     public synchronized boolean checkVRAM(){
@@ -71,8 +96,7 @@ public class GPU {
     }
 
     public synchronized boolean isCompleted() {
-        //return true;
-        throw new UnsupportedOperationException();
+        return model.isCompleted();
     }
     /**
      * @PRE:
@@ -84,6 +108,18 @@ public class GPU {
      */
     public synchronized void testModel(Model model) {
         //
+        Random rnd = new Random();
+        float randomizer = rnd.nextFloat(); // get random float in [0 , 1)
+        if (randomizer <= 0.6 && model.getStudent().getStatus() == Student.Degree.MSc){
+            model.setResults(Model.Results.Good);
+        }
+        else if (randomizer <= 0.8 && model.getStudent().getStatus() == Student.Degree.PhD){
+            model.setResults(Model.Results.Good);
+        }
+        else {
+            model.setResults(Model.Results.Bad);
+        }
+        model.setStatus(Model.Status.Tested);
     }
 
     // get current model status

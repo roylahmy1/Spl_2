@@ -46,8 +46,16 @@ public class Model {
         this.results = results;
     }
 
+    public Student getStudent() {
+        return student;
+    }
+
     public Data getData() {
         return data;
+    }
+
+    public boolean isCompleted() {
+        return Trained >= data.getSize();
     }
 
     public synchronized void increaseTrained() {

@@ -41,7 +41,7 @@ public class Data {
             if (chunkEnd > size) { // no more batches to get after this
                 chunkEnd = size - 1;
             }
-            Chunk chunk = new Chunk(this, inProcessing, chunkEnd + 1);
+            Chunk chunk = new Chunk(this, inProcessing, chunkEnd);
             inProcessing = chunkEnd + 1;
             return chunk;
         }
@@ -49,6 +49,10 @@ public class Data {
 
     public DataBatch[] getDataBatches() {
         return dataBatches;
+    }
+
+    public Type getType() {
+        return type;
     }
 
     public int getSize() {
@@ -65,10 +69,12 @@ class Chunk {
     private Data container;
     private final int startIndex;
     private final int endIndex;
+    private int currentIndex;
     public Chunk(Data container, int startIndex, int endIndex){
         this.container = container;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
+        this.currentIndex = startIndex;
     }
 
     public int getStartIndex() {
@@ -77,6 +83,17 @@ class Chunk {
 
     public int getEndIndex() {
         return endIndex;
+    }
+
+    public DataBatch getNext() {
+        if (currentIndex > endIndex)
+            return null;
+        DataBatch current = container.getDataBatches()[currentIndex];
+        currentIndex++;
+        return current;
+    }
+    public boolean isFinished() {
+        return !(this.currentIndex <= endIndex);
     }
 }
 

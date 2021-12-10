@@ -26,4 +26,7 @@ public class Student {
         papersRead = 0;
     }
 
+    public Degree getStatus() {
+        return status;
+    }
 }
