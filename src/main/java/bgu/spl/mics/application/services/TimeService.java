@@ -1,6 +1,11 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Message;
+import bgu.spl.mics.MessageBus;
+import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.ExitBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -13,15 +18,35 @@ import bgu.spl.mics.MicroService;
  */
 public class TimeService extends MicroService{
 
-	public TimeService() {
-		super("Change_This_Name");
-		// TODO Implement this
+	int timer;
+	int maxTime;
+	int tickInterval;
+
+	/**
+	 * @param maxTime: the total time of the run
+	 * @param tickInterval: tick interval size in milliseconds
+	 */
+	public TimeService(int maxTime, int tickInterval) {
+		super("timer");
+		timer = 0;
+		this.tickInterval = tickInterval;
+		this.maxTime = maxTime;
 	}
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
-		
-	}
+		int totalTicks = maxTime / tickInterval;
 
+		for (int t = 0; t <= totalTicks; t++){
+			TickBroadcast tick = new TickBroadcast();
+			sendBroadcast(tick);
+			//
+			try {
+				Thread.sleep(tickInterval);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		sendBroadcast(new ExitBroadcast());
+	}
 }

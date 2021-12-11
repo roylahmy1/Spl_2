@@ -13,8 +13,8 @@ import bgu.spl.mics.MicroService;
  */
 public class StudentService extends MicroService {
     public StudentService(String name) {
-        super("Change_This_Name");
-        // TODO Implement this
+        super(name);
+
     }
 
     @Override

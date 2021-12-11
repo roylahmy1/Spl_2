@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
 
 /**
  * GPU service is responsible for handling the
@@ -14,28 +15,32 @@ import bgu.spl.mics.MicroService;
 public class GPUService extends MicroService {
 
     public GPUService(String name) {
-        super("Change_This_Name");
-        // TODO Implement this
-
-        // Queue - ONLY events
-
-        // Wait for event in loop
-            // if event is tick
-                // check VRAM
-                    // if empty try filling
-                        // check is empty again
-                            // if still empty check is completed, and resolve training event and clean, and pull next event
-                            // else just continue for next event
-                    // process tick
-            // if start training model, call init train if empty, else push to queue
-            // if test, call test if empty, else push to queue
-
-
+        super(name);
     }
 
     @Override
     protected void initialize() {
-        // TODO Implement this
+
+        ///
+        /// TODO: implement subscribeBroadcast for all 3 events/broadcasts (YONI)
+        ///
+
+        subscribeBroadcast(TickBroadcast.class, tick -> {
+
+        });
+
+        // Queue - ONLY events
+
+        // Wait for event in loop
+        // if event is tick
+        // check VRAM
+        // if empty try filling
+        // check is empty again
+        // if still empty check is completed, and resolve training event and clean, and pull next event
+        // else just continue for next event
+        // process tick
+        // if start training model, call init train if empty, else push to queue
+        // if test, call test if empty, else push to queue
 
     }
 }
