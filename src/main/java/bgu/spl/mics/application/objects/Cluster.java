@@ -44,6 +44,9 @@ public class Cluster {
 		Map<GPU, DatabatchQueue> processedDataSets;
 
 	}
+	private static class  SingletonHolder {
+		private static Cluster  instance = new Cluster() ;
+	}
 	public synchronized void insertGpu(GPU gpu){
 		gpuList.add(gpu);
 		unprocessedDataSets.put(gpu, null);
@@ -58,7 +61,7 @@ public class Cluster {
 	 * Retrieves the singleton instance
 	 */
 	public static Cluster getInstance() {
-		return singletonInstance;
+		return SingletonHolder.instance;
 	}
 
 

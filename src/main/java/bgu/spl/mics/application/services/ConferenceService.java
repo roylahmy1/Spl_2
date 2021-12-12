@@ -20,6 +20,5 @@ public class ConferenceService extends MicroService {
 
     @Override
     protected void initialize() {
-
     }
 }

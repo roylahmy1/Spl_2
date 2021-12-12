@@ -38,6 +38,11 @@ public class CPUService extends MicroService {
             }
         });
 
+        // terminate the service
+        subscribeBroadcast(ExitBroadcast.class, exit -> {
+            terminate();
+        });
+
         // Wait for event in loop
             // if event is tick
             // check Chunk

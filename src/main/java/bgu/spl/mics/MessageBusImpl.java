@@ -1,10 +1,7 @@
 package bgu.spl.mics;
 
 import java.security.Provider;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -35,15 +32,18 @@ public class MessageBusImpl implements MessageBus {
 	// getMsgType - get (services, lastCalled, lock) by the msgType
 
 	HashMap<Class<? extends Message>, Subscription> Subscriptions;
-	HashMap<MicroService, Queue<MicroService>> registeredServices;
+	HashMap<MicroService, Queue<Message>> registeredServices;
 	// hold events to the future they sent
 	private HashMap<Event<?>, Future<?>> futures;
 
 	private static MessageBusImpl singletonInstance = new MessageBusImpl();
+	private static class  SingletonHolder {
+		private static MessageBusImpl  instance = new MessageBusImpl() ;
+	}
 
 	private MessageBusImpl() {
 		Subscriptions = new HashMap<Class<? extends Message>, Subscription>();
-		registeredServices = new HashMap<MicroService, Queue<MicroService>>();
+		registeredServices = new HashMap<MicroService, Queue<Message>>();
 		futures = new HashMap<Event<?>, Future<?>>();
 	}
 
@@ -51,61 +51,106 @@ public class MessageBusImpl implements MessageBus {
 	 * Retrieves the singleton instance
 	 */
 	public static MessageBus getInstance() {
-		return singletonInstance;
+		return SingletonHolder.instance;
 	}
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-
-
+		Subscription sub = new Subscription(m);
+		Subscriptions.put(type, sub);
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
 		// TODO Auto-generated method stub
+		Subscription sub=new Subscription(m);
+		Subscriptions.put(type,sub);
 
 	}
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-		// TODO Auto-generated method stub
 
+		Future future = futures.get(e);
+		future.resolve(result);
+//
+//		// TODO Auto-generated method stub
+//		result = (T) Subscriptions.get(e);
+//		futures.put(e, (Future<?>) result);
+//		this.notify();
 	}
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		// TODO Auto-generated method stub
+		Subscription sub = Subscriptions.get(b);
+		ArrayList<MicroService> services = sub.getAllServices();
+
+		for (MicroService service: services) {
+			Queue<Message> queue = registeredServices.get(b);
+			synchronized (queue){
+				queue.add(b);
+			}
+		}
 
 	}
 
-	
+
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
 		// TODO Auto-generated method stub
-		return null;
+		Subscription sub = Subscriptions.get(e);
+		MicroService m = sub.getNextService();
+
+		Queue<Message> queue = registeredServices.get(m);
+		synchronized (queue){
+			queue.add(e);
+			notifyAll(); // notify new message
+		}
+
+		//
+		Future<T> future = new Future<T>();
+		futures.put(e, future);
+		return future;
 	}
 
 	@Override
 	public void register(MicroService m) {
-//		Map<, MicroService>
-
+		//
+		Queue<Message> queue = new PriorityQueue<Message>();
+		registeredServices.put(m, queue);
 	}
 
 	@Override
 	public void unregister(MicroService m) {
 		// TODO Auto-generated method stub
+		registeredServices.remove(m);
+
+		// remove all subs of this service
+		for (Subscription sub: Subscriptions.values()) {
+			if (sub.isServiceExist(m)) // n
+				sub.removeService(m);
+		}
 
 	}
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException {
-		// TODO Auto-generated method stub
-//		while (){
-//			wait();
-//		}
-//
+		if(!registeredServices.containsKey(m))
+			throw new IllegalStateException("service not registered");
+		//
+		Queue<Message> q=registeredServices.get(m);
+		//
+		while (q.isEmpty()){
+			wait();
+		}
+		// should not have any memory safety, as nothing should remove element from queue
+		synchronized (q) {
+			Message r=q.remove();
+			return r;
+		}
 
-		return null;
+		//return null;
 	}
 
 	private class Subscription {
@@ -116,6 +161,12 @@ public class MessageBusImpl implements MessageBus {
 		}
 		public synchronized void addService(MicroService service){
 			services.add(service);
+		}
+		public boolean isServiceExist(MicroService service){
+			return services.contains(service);
+		}
+		public synchronized void removeService(MicroService service){
+			services.remove(service);
 		}
 		public synchronized MicroService getNextService() {
 			MicroService service = services.get(lastCalled);
