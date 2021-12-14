@@ -1,7 +1,13 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Event;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
+import bgu.spl.mics.application.objects.Model;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Conference service is in charge of
@@ -13,12 +19,30 @@ import bgu.spl.mics.application.objects.ConfrenceInformation;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class ConferenceService extends MicroService {
-    public ConferenceService(String name, int date) {
+    ConfrenceInformation confrenceInformation;
+    //Collection<Event> eventmodel= new ArrayList<Event>();
+    Model model;
+    public ConferenceService(String name, int date, ConfrenceInformation confrenceInformation, Model model) {
         super(name);
-        ConfrenceInformation confrenceInformation = new ConfrenceInformation(name, date);
+      //  ConfrenceInformation confrenceInformation = new ConfrenceInformation(name, date);
+        this.confrenceInformation=confrenceInformation;
+        this.model=model;
     }
 
     @Override
     protected void initialize() {
+        subscribeBroadcast(TickBroadcast.class, tick -> {
+            confrenceInformation.addPublication(model);
+
+        });
+        sendBroadcast(PublishConferenceBroadcast.class, publish -> {
+            for(Model model: confrenceInformation.getPublications()) {
+                if (model.getResults()== Model.Results.Good) {
+                    confrenceInformation.publish();
+                }
+            }
+
+        });
+
     }
 }

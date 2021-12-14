@@ -104,7 +104,6 @@ public class Cluster {
 		//
 		DatabatchQueue gpuQueue = processedDataSets.get(gpu);
 		DatabatchQueue resultQueue = new DatabatchQueue();
-
 		// ??? maybe ???
 		///
 		// should NOT await if no data exists
