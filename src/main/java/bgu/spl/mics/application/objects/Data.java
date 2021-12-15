@@ -22,13 +22,14 @@ public class Data {
     private Object inProcessingLock = new Object();
     //
     private int size;
-    private DataBatch[] dataBatches;
     public Data(int size, Type type){
         processed = 0;
-        dataBatches = new DataBatch[size];
-        for (int i = 0; i < size; i++) {
-            dataBatches[i] = new DataBatch(this, i * 1000);
-        }
+        this.size = size;
+        this.type = type;
+        //dataBatches = new DataBatch[size];
+//        for (int i = 0; i < size; i++) {
+//            dataBatches[i] = new DataBatch(this, i * 1000);
+//        }
     }
     public void batchCompleted(){
         synchronized(processedLock) {
@@ -37,6 +38,8 @@ public class Data {
     }
     public synchronized Chunk getChunk(int chunkSize){
         synchronized(inProcessingLock) {
+            if (inProcessing == size)
+                return null;
             int chunkEnd = inProcessing + chunkSize;
             if (chunkEnd > size) { // no more batches to get after this
                 chunkEnd = size - 1;
@@ -46,10 +49,10 @@ public class Data {
             return chunk;
         }
     }
-
-    public DataBatch[] getDataBatches() {
-        return dataBatches;
-    }
+//
+//    public DataBatch[] getDataBatches(int ) {
+//        return dataBatches;
+//    }
 
     public Type getType() {
         return type;
@@ -70,11 +73,15 @@ class Chunk {
     private final int startIndex;
     private final int endIndex;
     private int currentIndex;
+    private DataBatch[] dataBatches;
     public Chunk(Data container, int startIndex, int endIndex){
         this.container = container;
         this.startIndex = startIndex;
         this.endIndex = endIndex;
         this.currentIndex = startIndex;
+        for (int i = startIndex; i <= endIndex; i++) {
+            dataBatches[i] = new DataBatch(container, i * 1000);
+        }
     }
 
     public int getStartIndex() {
@@ -88,7 +95,7 @@ class Chunk {
     public DataBatch getNext() {
         if (currentIndex > endIndex)
             return null;
-        DataBatch current = container.getDataBatches()[currentIndex];
+        DataBatch current = dataBatches[currentIndex];
         currentIndex++;
         return current;
     }

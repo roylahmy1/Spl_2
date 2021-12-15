@@ -8,4 +8,7 @@ public class TrainModelEvent implements Event {
     public TrainModelEvent(Model model){
         this.model = model;
     }
+    public Model getModel() {
+        return model;
+    }
 }

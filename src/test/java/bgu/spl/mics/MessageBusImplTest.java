@@ -1,6 +1,9 @@
 package bgu.spl.mics;
 
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.CPU;
+import bgu.spl.mics.application.objects.Cluster;
+import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.services.CPUService;
 import bgu.spl.mics.application.services.GPUService;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
@@ -21,10 +24,13 @@ public class MessageBusImplTest extends TestCase {
 
     public void setUp() throws Exception {
         super.setUp();
+//
+//        CPU cpu = new CPU(8);
+//        GPU gpu = new GPU(Cluster.getInstance(), .Type.RTX2080);
 
         messageBus = MessageBusImpl.getInstance();
-        CPUService cpuService = new CPUService("Cpu 1");
-        GPUService gpuService = new GPUService("Gpu 1");
+//        CPUService cpuService = new CPUService("Cpu 1", cpu);
+//        GPUService gpuService = new GPUService("Gpu 1", gpu);
         tickBroadcast = new TickBroadcast();
         testEvent = new ExampleEvent("Tick 1");
         testBroadcast = new ExampleBroadcast("Tick 2");

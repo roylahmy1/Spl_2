@@ -18,9 +18,9 @@ import bgu.spl.mics.application.objects.Cluster;
  */
 public class CPUService extends MicroService {
     CPU cpu;
-    public CPUService(String name, CPU cpu) throws InterruptedException {
+    public CPUService(String name, int cores) throws InterruptedException {
         super(name);
-        this.cpu = cpu;
+        this.cpu = new CPU(cores, Cluster.getInstance());
     }
 
     @Override

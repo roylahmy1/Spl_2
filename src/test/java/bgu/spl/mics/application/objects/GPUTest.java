@@ -108,10 +108,11 @@ public class GPUTest extends TestCase {
 
         // ASSUME THIS PART IS WORKING
         // let us assume Cpu finished processing
-        DataBatch[] dataBatches = modelSmall.getData().getDataBatches();
-        for (int i = 0; i < dataBatches.length; i++) {
-            dataBatches[i].finished();
-            Cluster.getInstance().storeProcessedData(dataBatches[i]);
+        Chunk chunk = modelSmall.getData().getChunk(modelSmall.getData().getSize());
+        DataBatch db = chunk.getNext();
+        while(db != null) {
+            db.finished();
+            db = chunk.getNext();
         }
 
         // assume all data is processed to this point
@@ -137,10 +138,11 @@ public class GPUTest extends TestCase {
 
         // ASSUME THIS PART IS WORKING
         // let us assume Cpu finished processing
-        DataBatch[] dataBatches = modelSmall.getData().getDataBatches();
-        for (int i = 0; i < dataBatches.length; i++) {
-            dataBatches[i].finished();
-            Cluster.getInstance().storeProcessedData(dataBatches[i]);
+        Chunk chunk = modelSmall.getData().getChunk(modelSmall.getData().getSize());
+        DataBatch db = chunk.getNext();
+        while(db != null) {
+            db.finished();
+            db = chunk.getNext();
         }
 
         // assume all data is processed to this point

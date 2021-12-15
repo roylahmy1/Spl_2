@@ -8,4 +8,8 @@ public class TestModelEvent implements Event {
     public TestModelEvent(Model model){
         this.model = model;
     }
+
+    public Model getModel() {
+        return model;
+    }
 }

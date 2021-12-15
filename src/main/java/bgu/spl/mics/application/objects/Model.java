@@ -14,19 +14,36 @@ public class Model {
 //            ○ results: enum - can be “None” (for
 
     //
-    enum Status {PreTrained, Training, Trained, Tested}
-    enum Results {None, Good, Bad}
+    public enum Status {PreTrained, Training, Trained, Tested}
+    public enum Results {None, Good, Bad}
+    // init data from json
+    private String name;
+    private String type;
+    private int size;
     //
-    private String stringName;
     private Data data;
     private Student student;
+    //
     private Results results;
     private Status status;
     private int Trained;
 
     public Model(String stringName, Data data, Student student){
+        this.name = stringName;
+        this.data = data;
+        this.student = student;
         status = Status.PreTrained;
         results = Results.None;
+        Trained = 0;
+    }
+    // init model after json parsing
+    public void init(Student student){
+        // init data
+        this.data = new Data(size, Data.Type.valueOf(type));
+        this.student = student;
+        //
+        results = Results.None;
+        status = Status.PreTrained;
         Trained = 0;
     }
 

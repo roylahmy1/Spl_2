@@ -6,13 +6,11 @@ import bgu.spl.mics.application.messages.ExitBroadcast;
 import bgu.spl.mics.application.messages.TestModelEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.objects.Cluster;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * GPU service is responsible for handling the
@@ -25,9 +23,11 @@ import java.util.Queue;
  */
 public class GPUService extends MicroService {
     GPU gpu;
-    Collection<Model> eventmodel= new ArrayList<Model>();
-    public GPUService(String name,GPU gpu) {
-        super(name); this.gpu=gpu;
+    Queue<Model> modelsQueue = new PriorityQueue<>();
+
+    public GPUService(String name, GPU.Type type) {
+        super(name);
+        this.gpu = new GPU(Cluster.getInstance(), type);
     }
     @Override
     protected void initialize() {
@@ -40,41 +40,50 @@ public class GPUService extends MicroService {
 
 
         subscribeBroadcast(TickBroadcast.class, tick -> {
-            eventmodel.add(gpu.getModel());
-
-        });
-        subscribeEvent(TestModelEvent.class, test -> {
-            for(Model e:eventmodel) {
+            if (gpu.getModel() != null){
                 if (gpu.checkVRAM())
                     gpu.fillVRAM();
-                if (gpu.checkVRAM())
+                if (!gpu.checkVRAM())
+                    gpu.processTick();
+                else{
                     if (gpu.isCompleted()) {
-                        e.setStatus(Model.Status.Trained);
+                        gpu.getModel().setStatus(Model.Status.Trained);
                         gpu.clean();
+                        pullNextModel();
                     }
+                    // else means the service is sitting idle, waiting for cpu to finish
+                }
+            }
+            else {
+                pullNextModel();
             }
         });
-        subscribeEvent(TrainModelEvent.class, train -> {
-            if(gpu.getModel().getStatus()== Model.Status.Trained)
-                eventmodel.add(gpu.getModel());
-               else gpu.testModel(gpu.getModel());
+        subscribeEvent(TestModelEvent.class, event -> {
+            gpu.testModel(event.getModel());
+        });
+        subscribeEvent(TrainModelEvent.class, event -> {
+            modelsQueue.add(event.getModel());
         });
         subscribeBroadcast(ExitBroadcast.class, exit -> {
            terminate();
-
         });
         // Queue - ONLY events
 
         // Wait for event in loop
             // if event is tick
-            // check VRAM
-            // if empty try filling
-            // check is empty again
-            // if still empty check is completed, and resolve training event and clean, and pull next event
-            // else just continue for next event
-            // process tick
+                // check VRAM
+                // if empty try filling
+                // check is empty again
+                // if still empty check is completed, and resolve training event and clean, and pull next event
+                // else just continue for next event
+                // process tick
             // if start training model, call init train if empty, else push to queue
             // if test, call test if empty, else push to queue
 
+    }
+    private void pullNextModel(){
+        if (!modelsQueue.isEmpty()){
+            gpu.TrainModel(modelsQueue.poll());
+        }
     }
 }

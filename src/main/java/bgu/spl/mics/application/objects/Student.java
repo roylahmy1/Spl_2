@@ -15,6 +15,7 @@ public class Student {
     private String name;
     private String department;
     private Degree status;
+    private Model[] models;
     private int publications;
     private int papersRead;
 
@@ -28,5 +29,9 @@ public class Student {
 
     public Degree getStatus() {
         return status;
+    }
+
+    public Model[] getModels() {
+        return models;
     }
 }
