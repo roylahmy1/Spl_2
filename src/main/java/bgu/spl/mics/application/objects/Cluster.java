@@ -49,8 +49,8 @@ public class Cluster {
 	}
 	public synchronized void insertGpu(GPU gpu){
 		gpuList.add(gpu);
-		unprocessedDataSets.put(gpu, null);
-		processedDataSets.put(gpu, null);
+//		unprocessedDataSets.put(gpu, null);
+//		processedDataSets.put(gpu, null);
 	}
 	public synchronized void insertCpu(CPU cpu){
 		cpuList.add(cpu);
@@ -81,7 +81,7 @@ public class Cluster {
 		// decide how much data a CPU should get
 		synchronized (unprocessedIndexLock){
 			Chunk chunk = unprocessedDataSets.get(unprocessedIndex).getChunk(16);
-			unprocessedIndex = unprocessedIndex % unprocessedDataSets.size();
+			unprocessedIndex = (unprocessedIndex + 1) % unprocessedDataSets.size();
 			return chunk;
 		}
 		// ??? maybe ???
@@ -104,6 +104,7 @@ public class Cluster {
 		//
 		DatabatchQueue gpuQueue = processedDataSets.get(gpu);
 		DatabatchQueue resultQueue = new DatabatchQueue();
+
 		// ??? maybe ???
 		///
 		// should NOT await if no data exists

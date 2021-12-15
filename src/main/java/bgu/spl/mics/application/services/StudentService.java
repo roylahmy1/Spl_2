@@ -1,7 +1,16 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
+import bgu.spl.mics.application.messages.PublishResultsEvent;
+import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.objects.ConfrenceInformation;
+import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.Student;
+
+import java.util.ArrayList;
+import java.util.Queue;
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -22,7 +31,25 @@ public class StudentService extends MicroService {
 
     @Override
     protected void initialize() {
-        // TODO Implement this
+
+        subscribeBroadcast(PublishConferenceBroadcast.class, publish -> {
+            ConfrenceInformation confrenceInformation = publish.getConfrenceInformation();
+            // loop publications
+            for (Model model: confrenceInformation.getPublications()) {
+                // don't read his own publication
+                if (model.getStudent() != student){
+                    student.addPapersRead();
+                }
+            }
+        });
+        //
+
+
+        // loop untrained models
+        for (Model model: student.getModels()) {
+            TrainModelEvent trainModelEvent = new TrainModelEvent(model);
+            Future future = sendEvent(trainModelEvent);
+        }
 
     }
 }

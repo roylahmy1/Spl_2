@@ -16,6 +16,12 @@ import java.util.Scanner;
 public class CRMSRunner {
     public static void main(String[] args) {
 
+
+        ///
+        /// change inputFilePath to args[0]
+        ///
+
+
         Gson g = new Gson();
 
         String inputFilePath = "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//args[0];
@@ -24,39 +30,41 @@ public class CRMSRunner {
             InputFile input = g.fromJson(file, InputFile.class);
 
             // init all the models
-            for (Student student: input.Students) {
-                for (Model model: student.getModels()) {
+            for (Student student : input.Students) {
+                for (Model model : student.getModels()) {
                     model.init(student);
                 }
             }
+
+            ////
 
             ArrayList<MicroService> serviceList = new ArrayList<MicroService>();
 
             // create services
             // CPU's
             int counter = 0;
-            for (int cpuCores: input.CPUS) {
+            for (int cpuCores : input.CPUS) {
                 counter++;
                 MicroService service = new CPUService("CPU service " + counter, cpuCores);
                 serviceList.add(service);
             }
             // GPU's
             counter = 0;
-            for (String type: input.GPUS) {
+            for (String type : input.GPUS) {
                 counter++;
                 MicroService service = new GPUService("CPU service " + counter, GPU.Type.valueOf(type));
                 serviceList.add(service);
             }
             // Students
             counter = 0;
-            for (Student student: input.Students) {
+            for (Student student : input.Students) {
                 counter++;
                 MicroService service = new StudentService("Student service " + counter, student);
                 serviceList.add(service);
             }
             // Conferences
             counter = 0;
-            for (ConfrenceInformation conference: input.Conferences) {
+            for (ConfrenceInformation conference : input.Conferences) {
                 counter++;
                 MicroService service = new ConferenceService("Conference service " + counter, conference);
                 serviceList.add(service);
@@ -64,9 +72,11 @@ public class CRMSRunner {
             // time service
             TimeService timeService = new TimeService(input.Duration, input.TickTime);
             serviceList.add(timeService);
+            //timeService.run();
+
 
             // loop all services and init them
-            for (MicroService service: serviceList) {
+            for (MicroService service : serviceList) {
                 Thread run = new Thread(new Runnable() {
                     public void run() {
                         service.run();
@@ -76,11 +86,12 @@ public class CRMSRunner {
             }
 
             System.out.println("Hello World!");
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            } catch(IOException | InterruptedException e){
+                e.printStackTrace();
+            }
         }
-    }
-    public static String readFile(String path) throws IOException {
+
+        public static String readFile(String path) throws IOException {
         Scanner scanner = new Scanner( new File(path) );
         String text = scanner.useDelimiter("\\A").next();
         scanner.close(); // Put this call in a finally block

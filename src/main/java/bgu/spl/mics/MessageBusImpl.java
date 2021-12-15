@@ -83,7 +83,9 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		// TODO Auto-generated method stub
-		Subscription sub = Subscriptions.get(b);
+		Subscription sub = Subscriptions.get(b.getClass());
+//		if (sub == null)
+//			throw new Exception("no subs");
 		ArrayList<MicroService> services = sub.getAllServices();
 
 		for (MicroService service: services) {
@@ -102,10 +104,10 @@ public class MessageBusImpl implements MessageBus {
 		Subscription sub = Subscriptions.get(e);
 		MicroService m = sub.getNextService();
 
-		Queue<Message> queue = registeredServices.get(m);
-		synchronized (queue){
-			queue.add(e);
-			notifyAll(); // notify new message
+		Queue<Message> q = registeredServices.get(m);
+		synchronized (q){
+			q.add(e);
+			q.notifyAll(); // notify new message
 		}
 
 		//
@@ -141,11 +143,11 @@ public class MessageBusImpl implements MessageBus {
 		//
 		Queue<Message> q=registeredServices.get(m);
 		//
-		while (q.isEmpty()){
-			wait();
-		}
-		// should not have any memory safety, as nothing should remove element from queue
 		synchronized (q) {
+			while (q.isEmpty()){
+				q.wait();
+			}
+			// should not have any memory safety, as nothing should remove element from queue
 			Message r=q.remove();
 			return r;
 		}

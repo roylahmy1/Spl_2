@@ -20,24 +20,21 @@ import java.util.Collection;
  */
 public class ConferenceService extends MicroService {
     ConfrenceInformation confrenceInformation;
-    //Collection<Event> eventmodel= new ArrayList<Event>();
-    Model model;
-    public ConferenceService(String name, int date, ConfrenceInformation confrenceInformation, Model model) {
+    public ConferenceService(String name, int date, ConfrenceInformation confrenceInformation) {
         super(name);
       //  ConfrenceInformation confrenceInformation = new ConfrenceInformation(name, date);
         this.confrenceInformation=confrenceInformation;
-        this.model=model;
     }
 
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, tick -> {
-            confrenceInformation.addPublication(model);
+//            confrenceInformation.addPublication(model);
 
         });
         sendBroadcast(PublishConferenceBroadcast.class, publish -> {
             for(Model model: confrenceInformation.getPublications()) {
-                if (model.getResults()== Model.Results.Good) {
+                if (model.getResults().equals(Model.Results.Good)) {
                     confrenceInformation.publish();
                 }
             }

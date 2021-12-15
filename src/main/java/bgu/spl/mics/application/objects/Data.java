@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a data used by a model.
@@ -18,7 +19,7 @@ public class Data {
     //
     private int processed;
     private Object processedLock = new Object();
-    private int inProcessing;
+    private AtomicInteger inProcessing;
     private Object inProcessingLock = new Object();
     //
     private int size;
@@ -37,17 +38,32 @@ public class Data {
         }
     }
     public synchronized Chunk getChunk(int chunkSize){
-        synchronized(inProcessingLock) {
-            if (inProcessing == size)
+        //synchronized(inProcessingLock) {
+
+//
+//            inProcessing.compareAndSet()
+//
+//            int chunkEnd = inProcessing + chunkSize;
+//            inProcessing = chunkEnd + 1;
+
+
+            int inProcessingTemp;
+            do {
+                inProcessingTemp = inProcessing.get();
+            } while (!inProcessing.compareAndSet(inProcessingTemp, inProcessingTemp + chunkSize) && inProcessingTemp < size);
+
+            if (inProcessing.get() >= size)
                 return null;
-            int chunkEnd = inProcessing + chunkSize;
             if (chunkEnd > size) { // no more batches to get after this
                 chunkEnd = size - 1;
             }
+
+
+
             Chunk chunk = new Chunk(this, inProcessing, chunkEnd);
-            inProcessing = chunkEnd + 1;
+
             return chunk;
-        }
+        //}
     }
 //
 //    public DataBatch[] getDataBatches(int ) {

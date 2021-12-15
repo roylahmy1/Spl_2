@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.objects;
 
 import javax.swing.*;
+import java.util.ArrayList;
 import java.util.Queue;
 
 /**
@@ -11,7 +12,7 @@ public class ConfrenceInformation {
 
     private String name;
     private int date;
-    private Queue<Model> publications;
+    private ArrayList<Model> publications;
     private boolean hasPublishConference = false;
 
     public ConfrenceInformation(String name, int date){
@@ -21,7 +22,7 @@ public class ConfrenceInformation {
     public void addPublication(Model model){
         publications.add(model);
     }
-    public Queue<Model> getPublications(){
+    public ArrayList<Model> getPublications(){
         return publications;
     }
     public Boolean hasPublished(){

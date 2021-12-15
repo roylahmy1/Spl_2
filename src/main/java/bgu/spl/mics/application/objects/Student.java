@@ -18,6 +18,7 @@ public class Student {
     private Model[] models;
     private int publications;
     private int papersRead;
+    private Object papersReadLock;
 
     public Student (String name, String department, Degree status){
         this.name = name;
@@ -33,5 +34,17 @@ public class Student {
 
     public Model[] getModels() {
         return models;
+    }
+
+    public int getPapersRead() {
+        synchronized(papersReadLock){
+            return papersRead;
+        }
+    }
+
+    public void addPapersRead(){
+        synchronized(papersReadLock){
+            papersRead = papersRead + 1;
+        }
     }
 }
