@@ -8,6 +8,8 @@ import bgu.spl.mics.application.objects.Model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 /**
  * Conference service is in charge of
@@ -20,26 +22,41 @@ import java.util.Collection;
  */
 public class ConferenceService extends MicroService {
     ConfrenceInformation confrenceInformation;
-    public ConferenceService(String name, int date, ConfrenceInformation confrenceInformation) {
+    int i=0;
+    ArrayList<Model> modelsQueue = new ArrayList<>();
+    public ConferenceService(String name, ConfrenceInformation confrenceInformation) {
         super(name);
       //  ConfrenceInformation confrenceInformation = new ConfrenceInformation(name, date);
+      //  this.confrenceInformation=new ConfrenceInformation(name,date);
         this.confrenceInformation=confrenceInformation;
     }
 
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, tick -> {
-//            confrenceInformation.addPublication(model);
-
-        });
-        sendBroadcast(PublishConferenceBroadcast.class, publish -> {
-            for(Model model: confrenceInformation.getPublications()) {
-                if (model.getResults().equals(Model.Results.Good)) {
-                    confrenceInformation.publish();
-                }
+            if(!confrenceInformation.hasPublished())
+            {
+                confrenceInformation.publish();
+                i++;
             }
-
+            pullNextModel();
+        });
+        subscribeBroadcast(PublishConferenceBroadcast.class, publish -> {
+            ArrayList<Model> publications=publish.getConfrenceInformation().getPublications();
+            for(Model publication: publications)
+            {
+                modelsQueue.add(publication);
+            }
+        });
+        subscribeBroadcast(ExitBroadcast.class, exit -> {
+            terminate();
         });
 
+
+    }
+    private void pullNextModel(){
+        if (!modelsQueue.isEmpty()){
+            confrenceInformation.addPublication(modelsQueue.get(i));
+        }
     }
 }
