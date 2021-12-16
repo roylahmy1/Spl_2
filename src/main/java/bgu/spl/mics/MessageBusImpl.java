@@ -108,6 +108,8 @@ public class MessageBusImpl implements MessageBus {
 		Subscription sub = Subscriptions.get(e.getClass());
 		if(sub != null && sub.getAllServices().size() <= 0)
 			return null;
+		System.out.println("event: " + e.toString());
+		System.out.println("subs number: " + sub.getAllServices().size());
 		MicroService m = sub.getNextService();
 
 		Queue<Message> q = registeredServices.get(m);

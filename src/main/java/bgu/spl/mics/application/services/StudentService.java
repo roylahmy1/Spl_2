@@ -28,10 +28,7 @@ public class StudentService extends MicroService {
     public StudentService(String name, Student student) {
         super(name);
         this.student = student;
-    }
 
-    @Override
-    protected void initialize() {
 
         subscribeBroadcast(PublishConferenceBroadcast.class, publish -> {
             ConfrenceInformation confrenceInformation = publish.getConfrenceInformation();
@@ -44,6 +41,11 @@ public class StudentService extends MicroService {
             }
         });
         //
+    }
+
+    @Override
+    protected void initialize() {
+
 
         /** What to think about
         @side_1:

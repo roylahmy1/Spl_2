@@ -30,9 +30,8 @@ public class GPUService extends MicroService {
     public GPUService(String name, GPU.Type type) {
         super(name);
         this.gpu = new GPU(Cluster.getInstance(), type);
-    }
-    @Override
-    protected void initialize() {
+
+        //
 
         ///
         /// TODO: implement subscribeBroadcast for all 3 events/broadcasts (YONI)
@@ -69,20 +68,24 @@ public class GPUService extends MicroService {
             modelsQueue.add(event);
         });
         subscribeBroadcast(ExitBroadcast.class, exit -> {
-           terminate();
+            terminate();
         });
         // Queue - ONLY events
 
         // Wait for event in loop
-            // if event is tick
-                // check VRAM
-                // if empty try filling
-                // check is empty again
-                // if still empty check is completed, and resolve training event and clean, and pull next event
-                // else just continue for next event
-                // process tick
-            // if start training model, call init train if empty, else push to queue
-            // if test, call test if empty, else push to queue
+        // if event is tick
+        // check VRAM
+        // if empty try filling
+        // check is empty again
+        // if still empty check is completed, and resolve training event and clean, and pull next event
+        // else just continue for next event
+        // process tick
+        // if start training model, call init train if empty, else push to queue
+        // if test, call test if empty, else push to queue
+
+    }
+    @Override
+    protected void initialize() {
 
     }
     private void pullNextModel(){

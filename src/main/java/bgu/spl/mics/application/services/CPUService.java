@@ -21,10 +21,7 @@ public class CPUService extends MicroService {
     public CPUService(String name, int cores) throws InterruptedException {
         super(name);
         this.cpu = new CPU(cores, Cluster.getInstance());
-    }
 
-    @Override
-    protected void initialize() {
 
         // tick
         subscribeBroadcast(TickBroadcast.class, tick -> {
@@ -44,12 +41,17 @@ public class CPUService extends MicroService {
         });
 
         // Wait for event in loop
-            // if event is tick
-            // check Chunk
-            // if no chunk, updateChunk
-            // check chunk again
-            // if again null then finish loop
-            // else, process tick
+        // if event is tick
+        // check Chunk
+        // if no chunk, updateChunk
+        // check chunk again
+        // if again null then finish loop
+        // else, process tick
+
+    }
+
+    @Override
+    protected void initialize() {
 
     }
 }

@@ -28,10 +28,8 @@ public class ConferenceService extends MicroService {
     public ConferenceService(String name, ConfrenceInformation confrenceInformation) {
         super(name);
         this.confrenceInformation = confrenceInformation;
-    }
 
-    @Override
-    protected void initialize() {
+        //
         subscribeBroadcast(TickBroadcast.class, tick -> {
             if (timer <= confrenceInformation.getDate())
             {
@@ -51,6 +49,10 @@ public class ConferenceService extends MicroService {
         subscribeBroadcast(ExitBroadcast.class, exit -> {
             terminate();
         });
+    }
+
+    @Override
+    protected void initialize() {
         //
 
     }
