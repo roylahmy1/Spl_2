@@ -54,6 +54,10 @@ public class MessageBusImpl implements MessageBus {
 		return SingletonHolder.instance;
 	}
 
+	public static void resetSingleton() {
+		SingletonHolder.instance = new MessageBusImpl();
+	}
+
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
 		Subscription sub = new Subscription(m);
@@ -84,8 +88,8 @@ public class MessageBusImpl implements MessageBus {
 	public void sendBroadcast(Broadcast b) {
 		// TODO Auto-generated method stub
 		Subscription sub = Subscriptions.get(b.getClass());
-//		if (sub == null)
-//			throw new Exception("no subs");
+		//if (sub == null)
+		//	throw new Exception("no subs");
 		ArrayList<MicroService> services = sub.getAllServices();
 
 		for (MicroService service: services) {

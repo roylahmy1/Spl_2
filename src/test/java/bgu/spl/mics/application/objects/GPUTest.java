@@ -106,7 +106,7 @@ public class GPUTest extends TestCase {
     private void gpuRunRegularSize(GPU gpu, Model model, int expectedIterations) {
         gpu.TrainModel(model);
 
-        // ASSUME THIS PART IS WORKING
+        // PREAPARE TEST
         // let us assume Cpu finished processing
         model.getData().setHolderGpu(gpu);
         Chunk chunk = model.getData().getChunk(model.getData().getSize());
@@ -117,6 +117,7 @@ public class GPUTest extends TestCase {
             db = chunk.getNext();
         }
 
+        // EXECUTE TEST
         // assume all data is processed to this point
         assertTrue(gpu.isEmptyVRAM());
         gpu.fillVRAM(); // should fill the VRAM without any left
@@ -137,7 +138,7 @@ public class GPUTest extends TestCase {
         // check VRAM isn't taking more then it should
         //
 
-        // ASSUME THIS PART IS WORKING
+        // PREAPARE TEST
         // let us assume Cpu finished processing
         model.getData().setHolderGpu(gpu);
         Chunk chunk = model.getData().getChunk(model.getData().getSize());
@@ -147,6 +148,8 @@ public class GPUTest extends TestCase {
             Cluster.getInstance().storeProcessedData(db);
             db = chunk.getNext();
         }
+
+        // EXECUTE TEST
 
         // assume all data is processed to this point
         assertTrue(gpu.isEmptyVRAM());

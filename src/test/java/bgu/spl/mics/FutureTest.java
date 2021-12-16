@@ -76,17 +76,17 @@ public class FutureTest extends TestCase {
 
     }
 
-    public void testGetAndResolve2IsAlive() {
+    public void GetAndResolve2IsAlive() {
         // check that after X time the thread dies due to being unresolved
         Thread runTest2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                future.get(2, TimeUnit.SECONDS);
+                assertNull(future.get(100, TimeUnit.MILLISECONDS));
             }
         });
         runTest2.start();
         try {
-            Thread.sleep(5*1000);
+            Thread.sleep(3*100);
             assertFalse(runTest2.isAlive());
         } catch (InterruptedException e) {
             e.printStackTrace();

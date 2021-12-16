@@ -16,11 +16,10 @@ public class Data {
     }
 
     private Type type;
-    //
+    // the number of processed Db's
     private AtomicInteger processed;
-    private Object processedLock = new Object();
+    // the number of Db's acquired to chunks
     private AtomicInteger inProcessing;
-    private Object inProcessingLock = new Object();
     private GPU holderGpu;
     //
     private int size;
@@ -28,17 +27,18 @@ public class Data {
     public Data(int size, Type type){
         processed = new AtomicInteger(0);
         this.size = size;
+        // number of databatches in the data
         this.dbSize = size / 1000;
         this.type = type;
         this.inProcessing = new AtomicInteger(0);
     }
-
     public void setHolderGpu(GPU holderGpu) {
         this.holderGpu = holderGpu;
     }
     public GPU getHolderGpu() {
         return holderGpu;
     }
+    //
     public void batchCompleted(){
         int currentProcessed;
         do{
@@ -48,25 +48,27 @@ public class Data {
     }
     // get chunk concurrently using atomic inte
     public Chunk getChunk(int chunkSize){
-            int chunkStart;
-            do {
-                chunkStart = inProcessing.get();
-            } while (!inProcessing.compareAndSet(chunkStart, chunkStart + chunkSize) && chunkStart < dbSize);
+        //
+        int chunkStart;
+        do {
+            chunkStart = inProcessing.get();
+        } while (!inProcessing.compareAndSet(chunkStart, chunkStart + chunkSize) && chunkStart < dbSize);
 
-            int chunkEnd = chunkStart + chunkSize - 1;
-            if (chunkStart >= dbSize)
-                return null;
-            if (chunkEnd >= dbSize) { // no more batches to get after this
-                chunkEnd = dbSize - 1;
-            }
-            Chunk chunk = new Chunk(this, chunkStart, chunkEnd);
-            return chunk;
+        //
+        int chunkEnd = chunkStart + chunkSize - 1;
+        if (chunkStart >= dbSize)
+            return null;
+        if (chunkEnd >= dbSize) { // no more batches to get after this
+            chunkEnd = dbSize - 1;
+        }
+        Chunk chunk = new Chunk(this, chunkStart, chunkEnd);
+        return chunk;
     }
 
+    //
     public Type getType() {
         return type;
     }
-
     public int getSize() {
         return size;
     }
@@ -78,45 +80,44 @@ public class Data {
 }
 
 class Chunk {
+    // the Data object it relates to
     private Data container;
+    // the indexes of databatches "inside" the Data
     private final int startIndex;
     private final int endIndex;
+    // current working index, inside the CPU
     private int currentIndex;
+    // array of DB's
     private DataBatch[] dataBatches;
     public Chunk(Data container, int startIndex, int endIndex){
+        //
         this.container = container;
+        //
         this.startIndex = startIndex;
         this.endIndex = endIndex;
-        this.currentIndex = startIndex;
+        //
+        this.currentIndex = 0;
+        //
         this.dataBatches = new DataBatch[endIndex - startIndex + 1];
         for (int i = startIndex; i <= endIndex; i++) {
             dataBatches[i - startIndex] = new DataBatch(container, i * 1000);
         }
     }
-
     public Data getContainer() {
         return container;
     }
     public int getSize(){
             return dataBatches.length;
     }
-    public int getStartIndex() {
-        return startIndex;
-    }
-
-    public int getEndIndex() {
-        return endIndex;
-    }
-
     public DataBatch getNext() {
         if (currentIndex > endIndex)
             return null;
-        DataBatch current = dataBatches[currentIndex - startIndex];
+        DataBatch current = dataBatches[currentIndex];
         currentIndex = currentIndex + 1;
         return current;
     }
     public boolean isFinished() {
-        return !(this.currentIndex <= endIndex);
+        return this.currentIndex >= dataBatches.length;
     }
 }
 

@@ -64,15 +64,14 @@ public class Cluster {
 	public static Cluster getInstance() {
 		return SingletonHolder.instance;
 	}
+	public static void resetSingleton() {
+		SingletonHolder.instance = new Cluster();
+	}
 
 
 	// GPU stores unprocessed data
 	public void storeUnprocessedData(Data data) {
 		unprocessedDataSets.add(data);
-		// ??? maybe ???
-		///
-		// should NOT notify if data added
-		///
 	}
 	// CPU get data in chunks (according to need) of DB
 	public Chunk getUnprocessedData() {
@@ -85,24 +84,11 @@ public class Cluster {
 		if (!data.isCompleted())
 			unprocessedDataSets.add(data);
 		return chunk;
-//		synchronized (unprocessedIndexLock){
-//			unprocessedIndex = (unprocessedIndex + 1) % unprocessedDataSets.size();
-//			return chunk;
-//		}
-		// ??? maybe ???
-		///
-		// should NOT await if no data exists
-		///
 	}
 	// CPU stores DB set
 	public void storeProcessedData(DataBatch db) {
 		//
 		processedDataSets.get(db.getContainer().getHolderGpu()).add(db);
-
-		// ??? maybe ???
-		///
-		// should NOT notify if data added
-		///
 	}
 	// GPU get DB set
 	public DatabatchQueue getProcessedData(GPU gpu, int count) {
@@ -110,18 +96,14 @@ public class Cluster {
 		DatabatchQueue gpuQueue = processedDataSets.get(gpu);
 		DatabatchQueue resultQueue = new DatabatchQueue();
 
-		// ??? maybe ???
-		///
-		// should NOT await if no data exists
-		///
-
 		DataBatch db = null;
-		do {
+		// since only one gpu will remove element from queue, then no concurrent memory access
+		while (count > 0 && !gpuQueue.isEmpty()){
 			// pull the next element, if null will check at next loop
 			db = gpuQueue.pop();
-			resultQueue.add(db);
 			count--;
-		} while (count > 0 && db != null);
+			resultQueue.add(db);
+		}
 		//
 		return resultQueue;
 	}

@@ -25,7 +25,7 @@ public class CRMSRunner {
 
         Gson g = new Gson();
 
-        String inputFilePath = "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//args[0];
+        String inputFilePath = "C:\\Users\\segalyon\\Desktop\\spl2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//"C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//args[0];
         try {
             String file = readFile(inputFilePath);
             InputFile input = g.fromJson(file, InputFile.class);

@@ -19,6 +19,11 @@ public class ConfrenceInformation {
         this.date = date;
         this.name = name;
     }
+
+    public int getDate() {
+        return date;
+    }
+
     public void addPublication(Model model){
         publications.add(model);
     }

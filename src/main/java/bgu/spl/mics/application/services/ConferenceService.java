@@ -23,7 +23,7 @@ import java.util.Queue;
  */
 public class ConferenceService extends MicroService {
     ConfrenceInformation confrenceInformation;
-    int i = 0;
+    int timer = 0;
     ArrayList<Model> modelsQueue = new ArrayList<>();
     public ConferenceService(String name, ConfrenceInformation confrenceInformation) {
         super(name);
@@ -33,21 +33,25 @@ public class ConferenceService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, tick -> {
-            if(i < InputFile.getGlobalDuration())
+            if (timer <= confrenceInformation.getDate())
             {
+                timer += InputFile.getGlobalTickTime();
+            }
+            // publish all results
+            if (timer > confrenceInformation.getDate()) {
                 confrenceInformation.publish();
-                i += InputFile.getGlobalTickTime();
+                PublishConferenceBroadcast publishConferenceBroadcast = new PublishConferenceBroadcast(confrenceInformation);
+                sendBroadcast(publishConferenceBroadcast);
+                terminate();
             }
         });
         subscribeEvent(PublishResultsEvent.class, publish -> {
             confrenceInformation.addPublication(publish.getModel());
         });
-        subscribeBroadcast(PublishConferenceBroadcast.class, publish -> {
-            modelsQueue = publish.getConfrenceInformation().getPublications();
-            terminate();
-        });
         subscribeBroadcast(ExitBroadcast.class, exit -> {
             terminate();
         });
+        //
+
     }
 }

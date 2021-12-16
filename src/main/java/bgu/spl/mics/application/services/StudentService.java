@@ -67,11 +67,12 @@ public class StudentService extends MicroService {
                 model = (Model)futureTrain.get();
                 // test model
                 TestModelEvent testModelEvent = new TestModelEvent(model);
-                Future futureTest = sendEvent(trainModelEvent);
+                Future futureTest = sendEvent(testModelEvent);
                 model = (Model)futureTest.get();
                 //
                 if (model.getResults() == Model.Results.Good){
                   PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
+                  sendEvent(publishResultsEvent);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

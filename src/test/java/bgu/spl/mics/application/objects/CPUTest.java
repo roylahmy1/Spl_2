@@ -20,6 +20,11 @@ public class CPUTest extends TestCase {
 
     public void setUp() throws Exception {
         super.setUp();
+        init();
+    }
+    private void init(){
+
+        Cluster.resetSingleton();
 
         data1 = new Data(10000, Data.Type.Images);
         data2 = new Data(25000, Data.Type.Tabular);
@@ -34,7 +39,8 @@ public class CPUTest extends TestCase {
         gpu3 = new GPU(Cluster.getInstance(), GPU.Type.RTX3090);
     }
 
-    public void testRunCPU(){
+    public void testRunCPU() {
+        init();
         // should take (32 / 32) * 4 ticks = 4 ticks per batch.
         runCPUTest(cpu1, gpu1, data1, 4 * 10, 10);
         // should take (32 / 16) * 2 ticks = 4 ticks per batch.
@@ -44,6 +50,7 @@ public class CPUTest extends TestCase {
     }
 
     public void testRunThreadedCPU() throws InterruptedException {
+        init();
         // like the sequential run, but we make sure no shared memory problems
         data1.setHolderGpu(gpu1);
         data2.setHolderGpu(gpu2);
@@ -52,31 +59,31 @@ public class CPUTest extends TestCase {
         Cluster.getInstance().storeUnprocessedData(data2);
         Cluster.getInstance().storeUnprocessedData(data3);
 
-//        Thread run1 = new Thread(new Runnable() {
-//            public void run() {
-//                runCPUTestThreaded(cpu1);
-//            }
-//        });
-//        Thread run2 = new Thread(new Runnable() {
-//            public void run() {
-//                runCPUTestThreaded(cpu2);
-//            }
-//        });
-//        Thread run3 = new Thread(new Runnable() {
-//            public void run() {
-//                runCPUTestThreaded(cpu3);
-//            }
-//        });
-//        run1.start();
-//        run2.start();
-//        run3.start();
-//
-//        run1.join();
-//        run2.join();
-//        run3.join();
-        runCPUTestThreaded(cpu1);
-        runCPUTestThreaded(cpu2);
-        runCPUTestThreaded(cpu3);
+        Thread run1 = new Thread(new Runnable() {
+            public void run() {
+                runCPUTestThreaded(cpu1);
+            }
+        });
+        Thread run2 = new Thread(new Runnable() {
+            public void run() {
+                runCPUTestThreaded(cpu2);
+            }
+        });
+        Thread run3 = new Thread(new Runnable() {
+            public void run() {
+                runCPUTestThreaded(cpu3);
+            }
+        });
+        run1.start();
+        run2.start();
+        run3.start();
+
+        run1.join();
+        run2.join();
+        run3.join();
+       // runCPUTestThreaded(cpu1);
+        //runCPUTestThreaded(cpu2);
+        //runCPUTestThreaded(cpu3);
 
         // should not have anymore chunks
         cpu1.updateChunk();
@@ -123,6 +130,8 @@ public class CPUTest extends TestCase {
     }
 
     public void testCheckAndUpdateChunk() {
+
+        init();
         Cluster.getInstance().storeUnprocessedData(data1);
 
         // should take (32 / 32) * 4 ticks = 4 ticks per batch.

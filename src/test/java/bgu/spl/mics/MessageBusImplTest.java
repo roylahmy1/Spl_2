@@ -18,6 +18,7 @@ public class MessageBusImplTest extends TestCase {
     MessageBus messageBus;
     TickBroadcast tickBroadcast;
     CPUService cpuService;
+    CPUService cpuService1;
     GPUService gpuService;
     ExampleEvent testEvent;
     ExampleBroadcast testBroadcast;
@@ -36,6 +37,7 @@ public class MessageBusImplTest extends TestCase {
         testBroadcast = new ExampleBroadcast("Tick 2");
         messageBus.register(gpuService);
         messageBus.register(cpuService);
+        messageBus.register(cpuService1);
     }
 
     public void testGetInstance() {
@@ -46,12 +48,12 @@ public class MessageBusImplTest extends TestCase {
 
     public void testSubscribeAndSendEvent() {
         // Subscribe our test Event and end test
-        messageBus.subscribeEvent(testEvent.getClass(), cpuService);
+        messageBus.subscribeEvent(testEvent.getClass(), cpuService1);
         messageBus.sendEvent(testEvent);
 
         // check CPU get event
         try {
-            assertEquals(messageBus.awaitMessage(cpuService), testEvent);
+            assertEquals(messageBus.awaitMessage(cpuService1), testEvent);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -65,11 +67,14 @@ public class MessageBusImplTest extends TestCase {
     }
 
     public void testSubscribeAndSendBroadcast() {
+        MessageBusImpl.resetSingleton();
+        messageBus.register(cpuService);
+        messageBus.register(gpuService);
+        messageBus.subscribeBroadcast(testBroadcast.getClass(), cpuService);
+        messageBus.subscribeBroadcast(testBroadcast.getClass(), gpuService);
         // check a thread can get broadcast event from other threads
         Thread run1 = new Thread(new Runnable() {
             public void run() {
-                messageBus.register(cpuService);
-                messageBus.subscribeBroadcast(testBroadcast.getClass(), cpuService);
                 try {
                     Broadcast broadcast = (Broadcast) messageBus.awaitMessage(cpuService);
                     assertEquals(broadcast, testBroadcast);
@@ -81,8 +86,6 @@ public class MessageBusImplTest extends TestCase {
         Thread run2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                messageBus.register(gpuService);
-                messageBus.subscribeBroadcast(testBroadcast.getClass(), gpuService);
                 try {
                     Broadcast broadcast = (Broadcast) messageBus.awaitMessage(gpuService);
                     assertEquals(broadcast, testBroadcast);
@@ -104,6 +107,7 @@ public class MessageBusImplTest extends TestCase {
     }
 
     public void testComplete() throws InterruptedException {
+        MessageBusImpl.resetSingleton();
         final String val = "asdasd";
         messageBus.subscribeEvent(testEvent.getClass(), cpuService);
         Future<String> future = messageBus.sendEvent(testEvent);
@@ -116,10 +120,12 @@ public class MessageBusImplTest extends TestCase {
         // check unregister
         messageBus.register(cpuService);
         messageBus.unregister(cpuService);
+        Object exception = null;
         try {
-            assertNull(messageBus.awaitMessage(cpuService));
+            messageBus.awaitMessage(cpuService);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            exception = ex;
         }
+        assertNotNull(exception);
     }
 }
