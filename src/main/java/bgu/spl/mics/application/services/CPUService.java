@@ -29,11 +29,11 @@ public class CPUService extends MicroService {
         // tick
         subscribeBroadcast(TickBroadcast.class, tick -> {
             // update chunk if null
-            if(!cpu.checkChunk()){
+            if(cpu.isEmptyChunk()){
                 cpu.updateChunk();
             }
             // if chunk is not empty then process a tick
-            if(cpu.checkChunk()) {
+            if(!cpu.isEmptyChunk()) {
                 cpu.processTick();
             }
         });

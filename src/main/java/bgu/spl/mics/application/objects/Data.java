@@ -17,58 +17,51 @@ public class Data {
 
     private Type type;
     //
-    private int processed;
+    private AtomicInteger processed;
     private Object processedLock = new Object();
     private AtomicInteger inProcessing;
     private Object inProcessingLock = new Object();
+    private GPU holderGpu;
     //
     private int size;
+    private int dbSize;
     public Data(int size, Type type){
-        processed = 0;
+        processed = new AtomicInteger(0);
         this.size = size;
+        this.dbSize = size / 1000;
         this.type = type;
-        //dataBatches = new DataBatch[size];
-//        for (int i = 0; i < size; i++) {
-//            dataBatches[i] = new DataBatch(this, i * 1000);
-//        }
+        this.inProcessing = new AtomicInteger(0);
+    }
+
+    public void setHolderGpu(GPU holderGpu) {
+        this.holderGpu = holderGpu;
+    }
+    public GPU getHolderGpu() {
+        return holderGpu;
     }
     public void batchCompleted(){
-        synchronized(processedLock) {
-            processed++;
+        int currentProcessed;
+        do{
+            currentProcessed = processed.get();
         }
+        while (!processed.compareAndSet(currentProcessed, currentProcessed + 1));
     }
-    public synchronized Chunk getChunk(int chunkSize){
-        //synchronized(inProcessingLock) {
-
-//
-//            inProcessing.compareAndSet()
-//
-//            int chunkEnd = inProcessing + chunkSize;
-//            inProcessing = chunkEnd + 1;
-
-
-            int inProcessingTemp;
+    // get chunk concurrently using atomic inte
+    public Chunk getChunk(int chunkSize){
+            int chunkStart;
             do {
-                inProcessingTemp = inProcessing.get();
-            } while (!inProcessing.compareAndSet(inProcessingTemp, inProcessingTemp + chunkSize) && inProcessingTemp < size);
+                chunkStart = inProcessing.get();
+            } while (!inProcessing.compareAndSet(chunkStart, chunkStart + chunkSize) && chunkStart < dbSize);
 
-            if (inProcessing.get() >= size)
+            int chunkEnd = chunkStart + chunkSize - 1;
+            if (chunkStart >= dbSize)
                 return null;
-            if (chunkEnd > size) { // no more batches to get after this
-                chunkEnd = size - 1;
+            if (chunkEnd >= dbSize) { // no more batches to get after this
+                chunkEnd = dbSize - 1;
             }
-
-
-
-            Chunk chunk = new Chunk(this, inProcessing, chunkEnd);
-
+            Chunk chunk = new Chunk(this, chunkStart, chunkEnd);
             return chunk;
-        //}
     }
-//
-//    public DataBatch[] getDataBatches(int ) {
-//        return dataBatches;
-//    }
 
     public Type getType() {
         return type;
@@ -80,7 +73,7 @@ public class Data {
 
     // when processed++ will not cause damage if isCompleted
     public boolean isCompleted(){
-        return processed >= size;
+        return processed.get() >= dbSize - 1;
     }
 }
 
@@ -95,11 +88,18 @@ class Chunk {
         this.startIndex = startIndex;
         this.endIndex = endIndex;
         this.currentIndex = startIndex;
+        this.dataBatches = new DataBatch[endIndex - startIndex + 1];
         for (int i = startIndex; i <= endIndex; i++) {
-            dataBatches[i] = new DataBatch(container, i * 1000);
+            dataBatches[i - startIndex] = new DataBatch(container, i * 1000);
         }
     }
 
+    public Data getContainer() {
+        return container;
+    }
+    public int getSize(){
+            return dataBatches.length;
+    }
     public int getStartIndex() {
         return startIndex;
     }
@@ -111,8 +111,8 @@ class Chunk {
     public DataBatch getNext() {
         if (currentIndex > endIndex)
             return null;
-        DataBatch current = dataBatches[currentIndex];
-        currentIndex++;
+        DataBatch current = dataBatches[currentIndex - startIndex];
+        currentIndex = currentIndex + 1;
         return current;
     }
     public boolean isFinished() {
@@ -125,7 +125,9 @@ class DatabatchQueue {
 
     // a vector, used to implement the queue
     private Vector<DataBatch> vec_;
-    public DatabatchQueue() { }
+    public DatabatchQueue() {
+        vec_ = new Vector<DataBatch>();
+    }
 
     public synchronized int size(){
         return vec_.size();

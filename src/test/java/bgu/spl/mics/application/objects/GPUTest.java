@@ -94,7 +94,7 @@ public class GPUTest extends TestCase {
         GPU gpu = new GPU(Cluster.getInstance(), GPU.Type.GTX1080);
         final int expectedIterations = 8 * 4; // 4 for 1080
 
-        Data dataGTX1080 = new Data(8000 * 2, Data.Type.Text);
+        Data dataGTX1080 = new Data(8000, Data.Type.Text);
         Model modelGTX1080 = new Model("GTX1080", dataGTX1080, student);
         gpuRunRegularSize(gpu, modelGTX1080, expectedIterations);
 
@@ -108,22 +108,23 @@ public class GPUTest extends TestCase {
 
         // ASSUME THIS PART IS WORKING
         // let us assume Cpu finished processing
-        Chunk chunk = modelSmall.getData().getChunk(modelSmall.getData().getSize());
+        model.getData().setHolderGpu(gpu);
+        Chunk chunk = model.getData().getChunk(model.getData().getSize());
         DataBatch db = chunk.getNext();
         while(db != null) {
             db.finished();
+            Cluster.getInstance().storeProcessedData(db);
             db = chunk.getNext();
         }
 
         // assume all data is processed to this point
-        assertFalse(gpu.checkVRAM());
+        assertTrue(gpu.isEmptyVRAM());
         gpu.fillVRAM(); // should fill the VRAM without any left
         //
         for (int i = 0; i < expectedIterations; i++){
-            assertTrue(gpu.checkVRAM());
             gpu.processTick();
         }
-        assertFalse(gpu.checkVRAM());
+        assertTrue(gpu.isEmptyVRAM());
         assertTrue(gpu.isCompleted());
         //
         gpu.clean();
@@ -138,28 +139,28 @@ public class GPUTest extends TestCase {
 
         // ASSUME THIS PART IS WORKING
         // let us assume Cpu finished processing
-        Chunk chunk = modelSmall.getData().getChunk(modelSmall.getData().getSize());
+        model.getData().setHolderGpu(gpu);
+        Chunk chunk = model.getData().getChunk(model.getData().getSize());
         DataBatch db = chunk.getNext();
         while(db != null) {
             db.finished();
+            Cluster.getInstance().storeProcessedData(db);
             db = chunk.getNext();
         }
 
         // assume all data is processed to this point
-        assertFalse(gpu.checkVRAM());
+        assertTrue(gpu.isEmptyVRAM());
         gpu.fillVRAM(); // should fill the VRAM without any left
         //
         for (int i = 0; i < expectedIterations; i++){
-            assertFalse(gpu.checkVRAM());
             gpu.processTick();
         }
-        assertTrue(gpu.checkVRAM());
+        assertTrue(gpu.isEmptyVRAM());
         gpu.fillVRAM();
         for (int i = 0; i < expectedIterations; i++){
-            assertFalse(gpu.checkVRAM());
             gpu.processTick();
         }
-        assertTrue(gpu.checkVRAM());
+        assertTrue(gpu.isEmptyVRAM());
         assertTrue(gpu.isCompleted());
         //
         gpu.clean();
@@ -172,7 +173,7 @@ public class GPUTest extends TestCase {
         //
         assertEquals(gpu.getStatus(), Model.Status.Training);
         //
-        model1.setStatus(Model.Status.Trained);
+        gpu.testModel(model1);
         assertEquals(gpu.getStatus(), Model.Status.Tested);
     }
 
@@ -190,6 +191,6 @@ public class GPUTest extends TestCase {
         gpu.testModel(model1);
         assertEquals(model1.getStatus(), Model.Status.Tested);
         assertNotSame(model1.getResults(), Model.Results.None);
-        assertNotNull(gpu.getModel());
+        //assertNotNull(gpu.getModel());
     }
 }

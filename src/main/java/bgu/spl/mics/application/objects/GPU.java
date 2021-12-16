@@ -55,11 +55,11 @@ public class GPU {
      */
     public synchronized void TrainModel(Model model){
         this.model = model;
-
+        this.model.getData().setHolderGpu(this);
         // get Data, and start processing it
         // pass down to cluster
         if (model.getStatus() == Model.Status.PreTrained){
-            Cluster.getInstance().storeUnprocessedData(model.getData(), this);
+            Cluster.getInstance().storeUnprocessedData(model.getData());
             model.setStatus(Model.Status.Training);
         }
     }
@@ -72,23 +72,23 @@ public class GPU {
      * none
      */
     public synchronized void processTick() {
-        //
+        if (currentDataBatch == null)
+            currentDataBatch = VRAM.pop();
         if (currentDataBatch != null)
             currentProgress++;
-
         //
         if (currentProgress >= ticksPerDataBatch){
             if (currentDataBatch != null) {
                 model.increaseTrained();
             }
-            currentDataBatch = VRAM.pop();
+            currentDataBatch = null;
             currentProgress = 0;
         }
 
     }
     // check if VRAM need's refill
-    public synchronized boolean checkVRAM(){
-        return VRAM.isEmpty();
+    public synchronized boolean isEmptyVRAM(){
+        return VRAM == null || VRAM.isEmpty();
     }
     // if VRAM is empty (or close to it) then refill it
     public synchronized void fillVRAM(){

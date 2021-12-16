@@ -101,7 +101,9 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
 		// TODO Auto-generated method stub
-		Subscription sub = Subscriptions.get(e);
+		Subscription sub = Subscriptions.get(e.getClass());
+		if(sub != null && sub.getAllServices().size() <= 0)
+			return null;
 		MicroService m = sub.getNextService();
 
 		Queue<Message> q = registeredServices.get(m);

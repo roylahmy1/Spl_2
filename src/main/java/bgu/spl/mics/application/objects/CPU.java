@@ -37,9 +37,17 @@ public class CPU {
      * none
      */
     public synchronized void processTick(){
+        // get next if empty
+        if (current == null) {
+            if (unprocessedData != null)
+                current = unprocessedData.getNext();
+            currentProgress = 0;
+        }
 
         // process DB and update cluster accordingly
-        currentProgress++;
+        if (current != null) {
+            currentProgress++;
+        }
 
         // when finished update to the data batch
         // NOTICE - always should have another db to get, as when is last db get another chunk
@@ -50,25 +58,21 @@ public class CPU {
                 current.finished();
                 theCluster.storeProcessedData(current);
             }
-            // get next
-            current = unprocessedData.getNext();
-            if (current != null) {
-                currentProgress = 0;
-                currentNeededTicks = calculateCurrentNeededTicks(current);
-            }
+            // remove current when finished
+            current = null;
         }
 
     }
-    private int calculateCurrentNeededTicks(DataBatch db){
+    private int calculateCurrentNeededTicks(Chunk chunk){
         // Images - (32 / number of cores) * 4 ticks.
         // Text - (32 / number of cores) * 2 ticks.
         // Tabular - (32 / number of cores) * 1 ticks.
 
         int coefficient;
-        if (db.getContainer().getType() == Data.Type.Images){
+        if (chunk.getContainer().getType() == Data.Type.Images){
             coefficient = 4;
         }
-        else if (db.getContainer().getType() == Data.Type.Tabular){
+        else if (chunk.getContainer().getType() == Data.Type.Tabular){
             coefficient = 2;
         }
         else {
@@ -85,15 +89,19 @@ public class CPU {
      */
     public void updateChunk(){
         unprocessedData = theCluster.getUnprocessedData();
+        if (unprocessedData != null)
+            currentNeededTicks = calculateCurrentNeededTicks(unprocessedData);
         chunkIndex = 0;
     }
     /**
      check if chunk in empty, or has information left to process
      // update chunk if
      */
-    public boolean checkChunk(){
-        if (unprocessedData == null)
+    public boolean isEmptyChunk(){
+        if (current != null) // still processing, chunk might be empty but "fully"
             return false;
-        return chunkIndex < unprocessedData.getEndIndex() && chunkIndex >= unprocessedData.getStartIndex();
+        if (unprocessedData == null)
+            return true;
+        return chunkIndex >= unprocessedData.getSize();
     }
 }

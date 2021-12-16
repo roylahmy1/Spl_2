@@ -45,40 +45,46 @@ public class CPUTest extends TestCase {
 
     public void testRunThreadedCPU() throws InterruptedException {
         // like the sequential run, but we make sure no shared memory problems
-        Cluster.getInstance().storeUnprocessedData(data1, gpu1);
-        Cluster.getInstance().storeUnprocessedData(data2, gpu2);
-        Cluster.getInstance().storeUnprocessedData(data3, gpu3);
+        data1.setHolderGpu(gpu1);
+        data2.setHolderGpu(gpu2);
+        data3.setHolderGpu(gpu3);
+        Cluster.getInstance().storeUnprocessedData(data1);
+        Cluster.getInstance().storeUnprocessedData(data2);
+        Cluster.getInstance().storeUnprocessedData(data3);
 
-        Thread run1 = new Thread(new Runnable() {
-            public void run() {
-                runCPUTestThreaded(cpu1);
-            }
-        });
-        Thread run2 = new Thread(new Runnable() {
-            public void run() {
-                runCPUTestThreaded(cpu2);
-            }
-        });
-        Thread run3 = new Thread(new Runnable() {
-            public void run() {
-                runCPUTestThreaded(cpu3);
-            }
-        });
-        run1.start();
-        run2.start();
-        run3.start();
-
-        run1.join();
-        run2.join();
-        run3.join();
+//        Thread run1 = new Thread(new Runnable() {
+//            public void run() {
+//                runCPUTestThreaded(cpu1);
+//            }
+//        });
+//        Thread run2 = new Thread(new Runnable() {
+//            public void run() {
+//                runCPUTestThreaded(cpu2);
+//            }
+//        });
+//        Thread run3 = new Thread(new Runnable() {
+//            public void run() {
+//                runCPUTestThreaded(cpu3);
+//            }
+//        });
+//        run1.start();
+//        run2.start();
+//        run3.start();
+//
+//        run1.join();
+//        run2.join();
+//        run3.join();
+        runCPUTestThreaded(cpu1);
+        runCPUTestThreaded(cpu2);
+        runCPUTestThreaded(cpu3);
 
         // should not have anymore chunks
         cpu1.updateChunk();
-        assertFalse(cpu1.checkChunk());
+        assertTrue(cpu1.isEmptyChunk());
         cpu2.updateChunk();
-        assertFalse(cpu2.checkChunk());
+        assertTrue(cpu2.isEmptyChunk());
         cpu3.updateChunk();
-        assertFalse(cpu3.checkChunk());
+        assertTrue(cpu3.isEmptyChunk());
         // at the end there should be exactly the expected size
         DatabatchQueue databatchQueue1 = Cluster.getInstance().getProcessedData(gpu1, 1000); //
         DatabatchQueue databatchQueue2 = Cluster.getInstance().getProcessedData(gpu2, 1000); //
@@ -89,39 +95,40 @@ public class CPUTest extends TestCase {
     }
 
     private void runCPUTest(CPU cpu, GPU gpu, Data data, int expectedTicks, int expectedSize) {
-        Cluster.getInstance().storeUnprocessedData(data, gpu);
+        data.setHolderGpu(gpu);
+        Cluster.getInstance().storeUnprocessedData(data);
 
         cpu.updateChunk();
         for (int i = 0; i < expectedTicks; i++) {
-            if (cpu.checkChunk()){
+            if (cpu.isEmptyChunk()){
                 cpu.updateChunk();
             }
             cpu.processTick();
         }
         // should not be anymore chunks
         cpu.updateChunk();
-        assertFalse(cpu.checkChunk());
+        assertTrue(cpu.isEmptyChunk());
         // at the end there should be exactly the expected size
         DatabatchQueue databatchQueue = Cluster.getInstance().getProcessedData(gpu, expectedSize);
         assertEquals(databatchQueue.size(), expectedSize);
     }
     private void runCPUTestThreaded(CPU cpu) {
         cpu.updateChunk();
-        while(cpu.checkChunk()){
-            if (cpu.checkChunk()){
+        while(!cpu.isEmptyChunk()){
+            cpu.processTick();
+            if (cpu.isEmptyChunk()){
                 cpu.updateChunk();
             }
-            cpu.processTick();
         }
     }
 
     public void testCheckAndUpdateChunk() {
-        Cluster.getInstance().storeUnprocessedData(data1, gpu1);
+        Cluster.getInstance().storeUnprocessedData(data1);
 
         // should take (32 / 32) * 4 ticks = 4 ticks per batch.
 
-        assertFalse(cpu1.checkChunk());
+        assertTrue(cpu1.isEmptyChunk());
         cpu1.updateChunk();
-        assertTrue(cpu1.checkChunk());
+        assertFalse(cpu1.isEmptyChunk());
     }
 }

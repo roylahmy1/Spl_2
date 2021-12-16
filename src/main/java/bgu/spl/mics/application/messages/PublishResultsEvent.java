@@ -6,11 +6,11 @@ import bgu.spl.mics.application.objects.Model;
 
 public class PublishResultsEvent implements Event {
 
-    Model trainedModel;
-    public void PublishConferenceBroadcast(Model trainedModel){
-        this.trainedModel = trainedModel;
+    Model model;
+    public PublishResultsEvent(Model model){
+        this.model = model;
     }
-    public Model getTrainedModel() {
-        return trainedModel;
+    public Model getModel() {
+        return model;
     }
 }

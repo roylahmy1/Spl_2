@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Event;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.InputFile;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
 import bgu.spl.mics.application.objects.Model;
@@ -22,41 +23,31 @@ import java.util.Queue;
  */
 public class ConferenceService extends MicroService {
     ConfrenceInformation confrenceInformation;
-    int i=0;
+    int i = 0;
     ArrayList<Model> modelsQueue = new ArrayList<>();
     public ConferenceService(String name, ConfrenceInformation confrenceInformation) {
         super(name);
-      //  ConfrenceInformation confrenceInformation = new ConfrenceInformation(name, date);
-      //  this.confrenceInformation=new ConfrenceInformation(name,date);
-        this.confrenceInformation=confrenceInformation;
+        this.confrenceInformation = confrenceInformation;
     }
 
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, tick -> {
-            if(!confrenceInformation.hasPublished())
+            if(i < InputFile.getGlobalDuration())
             {
                 confrenceInformation.publish();
-                i++;
+                i += InputFile.getGlobalTickTime();
             }
-            pullNextModel();
+        });
+        subscribeEvent(PublishResultsEvent.class, publish -> {
+            confrenceInformation.addPublication(publish.getModel());
         });
         subscribeBroadcast(PublishConferenceBroadcast.class, publish -> {
-            ArrayList<Model> publications=publish.getConfrenceInformation().getPublications();
-            for(Model publication: publications)
-            {
-                modelsQueue.add(publication);
-            }
+            modelsQueue = publish.getConfrenceInformation().getPublications();
+            terminate();
         });
         subscribeBroadcast(ExitBroadcast.class, exit -> {
             terminate();
         });
-
-
-    }
-    private void pullNextModel(){
-        if (!modelsQueue.isEmpty()){
-            confrenceInformation.addPublication(modelsQueue.get(i));
-        }
     }
 }

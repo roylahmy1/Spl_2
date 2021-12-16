@@ -72,7 +72,7 @@ public class Model {
     }
 
     public boolean isCompleted() {
-        return Trained >= data.getSize();
+        return Trained * 1000 >= data.getSize();
     }
 
     public synchronized void increaseTrained() {

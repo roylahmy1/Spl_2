@@ -4,6 +4,7 @@ import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.PublishResultsEvent;
+import bgu.spl.mics.application.messages.TestModelEvent;
 import bgu.spl.mics.application.messages.TrainModelEvent;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
 import bgu.spl.mics.application.objects.Model;
@@ -44,11 +45,37 @@ public class StudentService extends MicroService {
         });
         //
 
+        /** What to think about
+        @side_1:
+         student sends all the models together, without waiting for results
+         @negatives: OS can give this student full rights, making all other students wait
+
+        @side_2:
+         student sends model, waits for result, and then sends another in loop
+         @negatives: can have useless GPU's
+
+        */
+
+
 
         // loop untrained models
         for (Model model: student.getModels()) {
-            TrainModelEvent trainModelEvent = new TrainModelEvent(model);
-            Future future = sendEvent(trainModelEvent);
+            try {
+                // train model
+                TrainModelEvent trainModelEvent = new TrainModelEvent(model);
+                Future futureTrain = sendEvent(trainModelEvent);
+                model = (Model)futureTrain.get();
+                // test model
+                TestModelEvent testModelEvent = new TestModelEvent(model);
+                Future futureTest = sendEvent(trainModelEvent);
+                model = (Model)futureTest.get();
+                //
+                if (model.getResults() == Model.Results.Good){
+                  PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
     }

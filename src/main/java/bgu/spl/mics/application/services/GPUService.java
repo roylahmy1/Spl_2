@@ -11,6 +11,7 @@ import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Model;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * GPU service is responsible for handling the
@@ -23,7 +24,8 @@ import java.util.*;
  */
 public class GPUService extends MicroService {
     GPU gpu;
-    Queue<Model> modelsQueue = new PriorityQueue<>();
+    TrainModelEvent currentEvent;
+    Queue<TrainModelEvent> modelsQueue = new ConcurrentLinkedQueue<>();
 
     public GPUService(String name, GPU.Type type) {
         super(name);
@@ -41,13 +43,14 @@ public class GPUService extends MicroService {
 
         subscribeBroadcast(TickBroadcast.class, tick -> {
             if (gpu.getModel() != null){
-                if (gpu.checkVRAM())
+                if (gpu.isEmptyVRAM())
                     gpu.fillVRAM();
-                if (!gpu.checkVRAM())
+                if (!gpu.isEmptyVRAM())
                     gpu.processTick();
                 else{
                     if (gpu.isCompleted()) {
                         gpu.getModel().setStatus(Model.Status.Trained);
+                        complete(currentEvent, gpu.getModel());
                         gpu.clean();
                         pullNextModel();
                     }
@@ -60,9 +63,10 @@ public class GPUService extends MicroService {
         });
         subscribeEvent(TestModelEvent.class, event -> {
             gpu.testModel(event.getModel());
+            complete(event, event.getModel());
         });
         subscribeEvent(TrainModelEvent.class, event -> {
-            modelsQueue.add(event.getModel());
+            modelsQueue.add(event);
         });
         subscribeBroadcast(ExitBroadcast.class, exit -> {
            terminate();
@@ -83,7 +87,8 @@ public class GPUService extends MicroService {
     }
     private void pullNextModel(){
         if (!modelsQueue.isEmpty()){
-            gpu.TrainModel(modelsQueue.poll());
+            currentEvent = modelsQueue.poll();
+            gpu.TrainModel(currentEvent.getModel());
         }
     }
 }

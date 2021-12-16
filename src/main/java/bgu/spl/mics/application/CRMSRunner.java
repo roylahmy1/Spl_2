@@ -5,6 +5,7 @@ import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
 
 import java.io.*;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Scanner;
@@ -35,7 +36,8 @@ public class CRMSRunner {
                     model.init(student);
                 }
             }
-
+            // set global vars
+            InputFile.setTimer(input.TickTime, input.Duration);
             ////
 
             ArrayList<MicroService> serviceList = new ArrayList<MicroService>();
@@ -43,34 +45,34 @@ public class CRMSRunner {
             // create services
             // CPU's
             int counter = 0;
-            for (int cpuCores : input.CPUS) {
+            for (int cpuCores : input.getCPUS()) {
                 counter++;
                 MicroService service = new CPUService("CPU service " + counter, cpuCores);
                 serviceList.add(service);
             }
             // GPU's
             counter = 0;
-            for (String type : input.GPUS) {
+            for (String type : input.getGPUS()) {
                 counter++;
                 MicroService service = new GPUService("CPU service " + counter, GPU.Type.valueOf(type));
                 serviceList.add(service);
             }
             // Students
             counter = 0;
-            for (Student student : input.Students) {
+            for (Student student : input.getStudents()) {
                 counter++;
                 MicroService service = new StudentService("Student service " + counter, student);
                 serviceList.add(service);
             }
             // Conferences
             counter = 0;
-            for (ConfrenceInformation conference : input.Conferences) {
+            for (ConfrenceInformation conference : input.getConferences()) {
                 counter++;
                 MicroService service = new ConferenceService("Conference service " + counter, conference);
                 serviceList.add(service);
             }
             // time service
-            TimeService timeService = new TimeService(input.Duration, input.TickTime);
+            TimeService timeService = new TimeService(input.getDuration(), input.getTickTime());
             serviceList.add(timeService);
             //timeService.run();
 
@@ -99,18 +101,18 @@ public class CRMSRunner {
     }
 }
 
-class InputFile {
-    ConfrenceInformation[] Conferences;
-    Student[] Students;
-    String[] GPUS;
-    int[] CPUS;
-    int TickTime;
-    int Duration;
-}
-class OutputFile {
-    ConfrenceInformation[] Conferences;
-    Student[] Students;
-    int cpuTimeUsed;
-    int gpuTimeUsed;
-    int batchesProcessed;
-}
+//class InputFile {
+//    ConfrenceInformation[] Conferences;
+//    Student[] Students;
+//    String[] GPUS;
+//    int[] CPUS;
+//    int TickTime;
+//    int Duration;
+//}
+//puclass OutputFile {
+//    ConfrenceInformation[] Conferences;
+//    Student[] Students;
+//    int cpuTimeUsed;
+//    int gpuTimeUsed;
+//    int batchesProcessed;
+//}
