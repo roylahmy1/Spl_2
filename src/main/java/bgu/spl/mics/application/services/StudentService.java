@@ -2,14 +2,12 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
-import bgu.spl.mics.application.messages.PublishResultsEvent;
-import bgu.spl.mics.application.messages.TestModelEvent;
-import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.Student;
 
+import javax.jws.WebParam;
 import java.util.ArrayList;
 import java.util.Queue;
 
@@ -25,6 +23,7 @@ import java.util.Queue;
 public class StudentService extends MicroService {
 
     private Student student;
+    int modelIndex = 0;
     public StudentService(String name, Student student) {
         super(name);
         this.student = student;
@@ -41,6 +40,38 @@ public class StudentService extends MicroService {
             }
         });
         //
+        subscribeEvent(GpuReadyEvent.class, event ->{
+            if (modelIndex < student.getModels().length) {
+                Model model = student.getModels()[modelIndex];
+                try {
+                    // train model
+                    TrainModelEvent trainModelEvent = new TrainModelEvent(model, event.getSender());
+                    Future futureTrain = sendEvent(trainModelEvent);
+                    model = (Model) futureTrain.get();
+                    System.out.println("Train model finished: " + trainModelEvent.toString());
+                    // test model
+                    TestModelEvent testModelEvent = new TestModelEvent(model);
+                    Future futureTest = sendEvent(testModelEvent);
+                    model = (Model) futureTest.get();
+                    System.out.println("Test model finished: " + trainModelEvent.toString());
+                    //
+                    if (model.getResults() == Model.Results.Good) {
+                        PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
+                        sendEvent(publishResultsEvent);
+                        System.out.println("publish model finished: " + trainModelEvent.toString());
+                    } else {
+                        System.out.println(" model finished bad: " + trainModelEvent.toString());
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                modelIndex++;
+            }
+            else{
+                // in no model's left, move them forward
+                sendEvent(event);
+            }
+        });
     }
 
     @Override
@@ -61,31 +92,8 @@ public class StudentService extends MicroService {
 
 
         // loop untrained models
-        for (Model model: student.getModels()) {
-            try {
-                // train model
-                TrainModelEvent trainModelEvent = new TrainModelEvent(model);
-                Future futureTrain = sendEvent(trainModelEvent);
-                model = (Model)futureTrain.get();
-                System.out.println("Train model finished: " + trainModelEvent.toString());
-                // test model
-                TestModelEvent testModelEvent = new TestModelEvent(model);
-                Future futureTest = sendEvent(testModelEvent);
-                model = (Model)futureTest.get();
-                System.out.println("Test model finished: " + trainModelEvent.toString());
-                //
-                if (model.getResults() == Model.Results.Good){
-                  PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
-                  sendEvent(publishResultsEvent);
-                    System.out.println("publish model finished: " + trainModelEvent.toString());
-                }
-                else{
-                    System.out.println(" model finished bad: " + trainModelEvent.toString());
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+//        for (Model model: student.getModels()) {
+//        }
 
     }
 }

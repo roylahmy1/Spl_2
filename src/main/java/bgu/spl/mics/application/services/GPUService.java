@@ -2,10 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Message;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.ExitBroadcast;
-import bgu.spl.mics.application.messages.TestModelEvent;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.Cluster;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Model;
@@ -27,6 +24,8 @@ public class GPUService extends MicroService {
     TrainModelEvent currentEvent;
     public int tickCounter = 0;
     Queue<TrainModelEvent> modelsQueue = new ConcurrentLinkedQueue<>();
+    //
+    boolean hasSentGpuReadyEvent = false;
 
     public GPUService(String name, GPU.Type type) {
         super(name);
@@ -48,14 +47,18 @@ public class GPUService extends MicroService {
 //            }
             //System.out.println(" GPU Ticker" + tick.getCurrentTime());
             if (gpu.getModel() != null){
+                // reset the has sent gpu
+                hasSentGpuReadyEvent = false;
+                //
                 if (gpu.isEmptyVRAM()) {
                     gpu.fillVRAM();
-                    System.out.println(" GPU fill VRAM" + tick.getCurrentTime());
+                    //System.out.println(" GPU fill VRAM" + tick.getCurrentTime());
                 }
                 if (!gpu.isEmptyVRAM())
                 {
                     gpu.processTick();
-                    System.out.println(" GPU processs tick: at time" + tick.getCurrentTime());
+                    //if (tick.getCurrentTime() % 100 == 0)
+                        //System.out.println(" GPU " + name + " processs tick: at time" + tick.getCurrentTime());
                 }
                 else{
                     if (gpu.isCompleted()) {
@@ -63,14 +66,14 @@ public class GPUService extends MicroService {
                         gpu.getModel().setStatus(Model.Status.Trained);
                         complete(currentEvent, gpu.getModel());
                         gpu.clean();
-                        pullNextModel();
+                        gpuReady();
                     }
-                    System.out.println(" GPU idel, no VRAM" + tick.getCurrentTime());
+                    //System.out.println(" GPU idel, no VRAM" + tick.getCurrentTime());
                     // else means the service is sitting idle, waiting for cpu to finish
                 }
             }
             else {
-                pullNextModel();
+                gpuReady();
             }
         });
         subscribeEvent(TestModelEvent.class, event -> {
@@ -78,7 +81,12 @@ public class GPUService extends MicroService {
             complete(event, event.getModel());
         });
         subscribeEvent(TrainModelEvent.class, event -> {
-            modelsQueue.add(event);
+            if (gpu.getModel() != null)
+                sendEvent(event);
+            else{
+                currentEvent = event;
+                gpu.TrainModel(event.getModel());
+            }
         });
         subscribeBroadcast(ExitBroadcast.class, exit -> {
             terminate();
@@ -101,10 +109,17 @@ public class GPUService extends MicroService {
     protected void initialize() {
 
     }
-    private void pullNextModel(){
-        if (!modelsQueue.isEmpty()){
-            currentEvent = modelsQueue.poll();
-            gpu.TrainModel(currentEvent.getModel());
+    private void gpuReady(){
+//        if (!modelsQueue.isEmpty()){
+//            currentEvent = modelsQueue.poll();
+//            gpu.TrainModel(currentEvent.getModel());
+//        }
+//        else{
+            // queue is empty
+            // hasSentGpuReadyEvent must be sent only once while waiting
+        if (!hasSentGpuReadyEvent){
+            GpuReadyEvent event = new GpuReadyEvent(gpu);
+            sendEvent(event);
         }
     }
 }

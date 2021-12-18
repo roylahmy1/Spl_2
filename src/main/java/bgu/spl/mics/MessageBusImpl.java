@@ -32,10 +32,10 @@ public class MessageBusImpl implements MessageBus {
 	// functions:
 	// getMsgType - get (services, lastCalled, lock) by the msgType
 
-	HashMap<Class<? extends Message>, Subscription> Subscriptions;
-	HashMap<MicroService, Queue<Message>> registeredServices;
+	ConcurrentHashMap<Class<? extends Message>, Subscription> Subscriptions;
+	ConcurrentHashMap<MicroService, Queue<Message>> registeredServices;
 	// hold events to the future they sent
-	private HashMap<Event<?>, Future<?>> futures;
+	private ConcurrentHashMap<Event<?>, Future<?>> futures;
 
 	private static MessageBusImpl singletonInstance = new MessageBusImpl();
 	private static class  SingletonHolder {
@@ -43,9 +43,9 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	private MessageBusImpl() {
-		Subscriptions = new HashMap<Class<? extends Message>, Subscription>();
-		registeredServices = new HashMap<MicroService, Queue<Message>>();
-		futures = new HashMap<Event<?>, Future<?>>();
+		Subscriptions = new ConcurrentHashMap<Class<? extends Message>, Subscription>();
+		registeredServices = new ConcurrentHashMap<MicroService, Queue<Message>>();
+		futures = new ConcurrentHashMap<Event<?>, Future<?>>();
 	}
 
 	/**
@@ -60,9 +60,9 @@ public class MessageBusImpl implements MessageBus {
 		getInstance().clear();
 	}
 	public void clear() {
-		Subscriptions = new HashMap<Class<? extends Message>, Subscription>();
-		registeredServices = new HashMap<MicroService, Queue<Message>>();
-		futures = new HashMap<Event<?>, Future<?>>();
+		Subscriptions = new ConcurrentHashMap<Class<? extends Message>, Subscription>();
+		registeredServices = new ConcurrentHashMap<MicroService, Queue<Message>>();
+		futures = new ConcurrentHashMap<Event<?>, Future<?>>();
 	}
 
 	@Override
@@ -95,7 +95,11 @@ public class MessageBusImpl implements MessageBus {
 	public <T> void complete(Event<T> e, T result) {
 
 		Future future = futures.get(e);
-		future.resolve(result);
+		if (future == null){
+			int a = 1;
+		}
+		else
+			future.resolve(result);
 //
 //		// TODO Auto-generated method stub
 //		result = (T) Subscriptions.get(e);
@@ -107,15 +111,19 @@ public class MessageBusImpl implements MessageBus {
 	public void sendBroadcast(Broadcast b) {
 		// TODO Auto-generated method stub
 		Subscription sub = Subscriptions.get(b.getClass());
-		//if (sub == null)
-		//	throw new Exception("no subs");
 		ArrayList<MicroService> services = sub.getAllServices();
 
 		for (MicroService service: services) {
 			Queue<Message> queue = registeredServices.get(service);
-			synchronized (queue){
-				queue.add(b);
-				queue.notifyAll(); // notify new message
+//			if(queue == null) {
+//				int a = 1;
+//			}
+
+			if (queue != null){
+				synchronized (queue){
+					queue.add(b);
+					queue.notifyAll(); // notify new message
+				}
 			}
 		}
 
@@ -147,19 +155,23 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		//
-		Queue<Message> queue = new ConcurrentLinkedQueue<Message>();
-		registeredServices.put(m, queue);
+		synchronized (m) {
+			Queue<Message> queue = new ConcurrentLinkedQueue<Message>();
+			registeredServices.put(m, queue);
+		}
 	}
 
 	@Override
 	public void unregister(MicroService m) {
 		// TODO Auto-generated method stub
-		registeredServices.remove(m);
+		synchronized (m) {
+			registeredServices.remove(m);
 
-		// remove all subs of this service
-		for (Subscription sub: Subscriptions.values()) {
-			if (sub.isServiceExist(m)) // n
-				sub.removeService(m);
+			// remove all subs of this service
+			for (Subscription sub : Subscriptions.values()) {
+				if (sub.isServiceExist(m)) // n
+					sub.removeService(m);
+			}
 		}
 
 	}

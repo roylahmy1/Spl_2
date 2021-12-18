@@ -25,6 +25,9 @@ public class ConfrenceInformation {
     }
 
     public void addPublication(Model model){
+        if(publications == null){
+            publications = new ArrayList<Model>();
+        }
         publications.add(model);
     }
     public ArrayList<Model> getPublications(){

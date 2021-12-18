@@ -37,6 +37,7 @@ public class ConferenceService extends MicroService {
             }
             // publish all results
             if (timer > confrenceInformation.getDate()) {
+                System.out.println("publish: " + name);
                 confrenceInformation.publish();
                 PublishConferenceBroadcast publishConferenceBroadcast = new PublishConferenceBroadcast(confrenceInformation);
                 sendBroadcast(publishConferenceBroadcast);

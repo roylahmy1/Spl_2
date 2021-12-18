@@ -26,6 +26,7 @@ public class Student {
         this.status = status;
         publications = 0;
         papersRead = 0;
+        papersReadLock = new Object();
     }
 
     public Degree getStatus() {
@@ -37,14 +38,18 @@ public class Student {
     }
 
     public int getPapersRead() {
-        synchronized(papersReadLock){
+//        synchronized(papersReadLock){
             return papersRead;
-        }
+//        }
     }
 
     public void addPapersRead(){
-        synchronized(papersReadLock){
+//        synchronized(papersReadLock){
             papersRead = papersRead + 1;
-        }
+//        }
+    }
+
+    public String getName() {
+        return name;
     }
 }

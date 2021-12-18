@@ -76,8 +76,6 @@ public class GPU {
             currentDataBatch = VRAM.pop();
         if (currentDataBatch != null)
             currentProgress++;
-        else
-            System.out.println("GPU processs tick: sitting idel");
         //
         if (currentProgress >= ticksPerDataBatch){
             if (currentDataBatch != null) {
@@ -90,6 +88,8 @@ public class GPU {
     }
     // check if VRAM need's refill
     public synchronized boolean isEmptyVRAM(){
+        if (currentDataBatch != null)
+            return false;
         return VRAM == null || VRAM.isEmpty();
     }
     // if VRAM is empty (or close to it) then refill it

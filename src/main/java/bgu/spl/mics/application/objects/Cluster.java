@@ -32,6 +32,9 @@ public class Cluster {
 
 	LinkedList<GPU> gpuList;
 	LinkedList<CPU> cpuList;
+	int ModelsProceessed = 0;
+	int ModelsStarted = 0;
+	LinkedList<Model> startedTrainedModels;
 	//
 	private int unprocessedIndex;
 	private ConcurrentLinkedQueue<Data> unprocessedDataSets = new ConcurrentLinkedQueue<Data>();
@@ -44,7 +47,8 @@ public class Cluster {
 		//
 		Map<GPU, Data> unprocessedDataSets;
 		Map<GPU, DatabatchQueue> processedDataSets;
-
+		//
+		startedTrainedModels = new LinkedList<>();
 	}
 	private static class  SingletonHolder {
 		private static Cluster  instance = new Cluster() ;
@@ -72,6 +76,10 @@ public class Cluster {
 	// GPU stores unprocessed data
 	public void storeUnprocessedData(Data data) {
 		unprocessedDataSets.add(data);
+		synchronized (unprocessedDataSets){
+			ModelsStarted++;
+			startedTrainedModels.add(data.getHolderGpu().getModel());
+		}
 	}
 	// CPU get data in chunks (according to need) of DB
 	public Chunk getUnprocessedData() {
@@ -83,6 +91,11 @@ public class Cluster {
 		// re add data to the end of the queue
 		if (!data.isCompleted())
 			unprocessedDataSets.add(data);
+		else {
+			synchronized (unprocessedDataSets) {
+				ModelsProceessed++;
+			}
+		}
 		return chunk;
 	}
 	// CPU stores DB set
@@ -93,7 +106,7 @@ public class Cluster {
 	// GPU get DB set
 	public DatabatchQueue getProcessedData(GPU gpu, int count) {
 		//
-		System.out.println("fill VRAM with " + count);
+		//System.out.println("fill VRAM with " + count);
 		DatabatchQueue gpuQueue = processedDataSets.get(gpu);
 		DatabatchQueue resultQueue = new DatabatchQueue();
 
@@ -105,7 +118,7 @@ public class Cluster {
 			count--;
 			resultQueue.add(db);
 		}
-		System.out.println("finished filling VRAM with " + count);
+		//System.out.println("finished filling VRAM with " + count);
 		//
 		return resultQueue;
 	}
