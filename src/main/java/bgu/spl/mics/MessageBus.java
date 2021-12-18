@@ -1,5 +1,8 @@
 package bgu.spl.mics;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * The message-bus is a shared object used for communication between
  * micro-services.
@@ -96,4 +99,5 @@ public interface MessageBus {
 
     // extra function for testing
     public void clear();
+    public ConcurrentHashMap<MicroService, Queue<Message>> getRegisteredServices();
 }

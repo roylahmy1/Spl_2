@@ -31,20 +31,6 @@
 
         },
         {
-            "name": "Zazu",
-            "department": "EE",
-            "status": "PhD",
-            "models":
-            [
-                {
-                    "name": "VIT",
-                    "type": "Images",
-                    "size": 100000000
-                }
-            ]
-
-        },
-        {
             "name": "Pumba",
             "department": "Computer Science",
             "status": "PhD",
@@ -141,5 +127,5 @@
         {"name": "AISTATS", "date": 15000}
     ],
     "TickTime": 1,
-    "Duration": 20000
+    "Duration": 30000
 }

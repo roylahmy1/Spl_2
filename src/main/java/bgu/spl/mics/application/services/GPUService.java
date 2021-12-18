@@ -23,8 +23,6 @@ public class GPUService extends MicroService {
     GPU gpu;
     TrainModelEvent currentEvent;
     Queue<TrainModelEvent> modelsQueue = new ConcurrentLinkedQueue<>();
-    //
-    boolean hasSentGpuReadyEvent = false;
 
     public GPUService(String name, GPU.Type type) {
         super(name);
@@ -41,8 +39,6 @@ public class GPUService extends MicroService {
 
         subscribeBroadcast(TickBroadcast.class, tick -> {
             if (gpu.getModel() != null){
-                // reset the has sent gpu
-                hasSentGpuReadyEvent = false;
                 //
                 if (gpu.isEmptyVRAM()) {
                     gpu.fillVRAM();

@@ -24,6 +24,8 @@ public abstract class MicroService implements Runnable {
 
     private boolean terminated = false;
     private final String name;
+    boolean isAwaiting = false;
+    boolean isProcessing = false;
     // list of functions to execute according to each event type
     private HashMap<Class<? extends Message>, Callback> functions = new HashMap<>();
 
@@ -153,6 +155,9 @@ public abstract class MicroService implements Runnable {
      * The entry point of the micro-service. TODO: you must complete this code
      * otherwise you will end up in an infinite loop.
      */
+    protected boolean isTerminated(){
+        return terminated;
+    }
     @Override
     public final void run() {
         initialize();
@@ -161,14 +166,14 @@ public abstract class MicroService implements Runnable {
             try {
                 // Wait for a message, if not null then execute function(callback) accordingly
                 //System.out.println("start awaiting " + this.toString());
+                isAwaiting = true;
                 Message m = msgBus.awaitMessage(this);
+                isAwaiting = false;
                 //System.out.println("end awaiting " + this.toString() + " with msg " + m.toString());
                 if (m != null) {
-                    //if (functions.get(m.getClass()) == null){
-                        //System.out.println("function: ...");
-                        //System.out.println("msg: " + m.toString() + "::: service: " + this.toString());
-                    //}
+                    isProcessing = true;
                     functions.get(m.getClass()).call(m);
+                    isProcessing = false;
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -176,6 +181,7 @@ public abstract class MicroService implements Runnable {
         }
         // Upon termination, unregister.
         msgBus.unregister(this);
+        System.out.println("service " + name + " unregistered");
     }
 
 }

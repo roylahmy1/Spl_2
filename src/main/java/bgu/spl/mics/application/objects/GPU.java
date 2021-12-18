@@ -74,8 +74,10 @@ public class GPU {
     public synchronized void processTick() {
         if (currentDataBatch == null)
             currentDataBatch = VRAM.pop();
-        if (currentDataBatch != null)
+        if (currentDataBatch != null){
             currentProgress++;
+            theCluster.increaseGpuTime();
+        }
         //
         if (currentProgress >= ticksPerDataBatch){
             if (currentDataBatch != null) {

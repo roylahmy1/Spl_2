@@ -47,6 +47,7 @@ public class CPU {
         // process DB and update cluster accordingly
         if (current != null) {
             currentProgress++;
+            theCluster.increaseCpuTime();
         }
 
         // when finished update to the data batch

@@ -50,6 +50,7 @@ public class TimeService extends MicroService{
 				e.printStackTrace();
 			}
 		}
+		terminate();
 		sendBroadcast(new ExitBroadcast());
 	}
 }

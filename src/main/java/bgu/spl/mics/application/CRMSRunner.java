@@ -25,8 +25,8 @@ public class CRMSRunner {
 
         Gson g = new Gson();
 
-        String inputFilePath = "C:\\Users\\segalyon\\Desktop\\spl2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//"C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//args[0];
-        //String inputFilePath = "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";
+        //String inputFilePath = "C:\\Users\\segalyon\\Desktop\\spl2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//"C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//args[0];
+        String inputFilePath = "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";
         try {
             String file = readFile(inputFilePath);
             InputFile input = g.fromJson(file, InputFile.class);
@@ -55,7 +55,7 @@ public class CRMSRunner {
             counter = 0;
             for (String type : input.getGPUS()) {
                 counter++;
-                MicroService service = new GPUService("CPU service " + counter, GPU.Type.valueOf(type));
+                MicroService service = new GPUService("GPU service " + counter, GPU.Type.valueOf(type));
                 serviceList.add(service);
             }
             // Students
@@ -93,6 +93,12 @@ public class CRMSRunner {
                 thread.join();
             }
             OutputFile output = new OutputFile();
+            output.setBatchesProcessed(Cluster.getInstance().getBatchesProcessed());
+            output.setCpuTimeUsed(Cluster.getInstance().getCpuTime());
+            output.setGpuTimeUsed(Cluster.getInstance().getGpuTime());
+            output.setStudents(input.Students);
+            output.setConferences(input.getConferences());
+
 
 
             System.out.println("Hello World!");

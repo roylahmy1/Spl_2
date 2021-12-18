@@ -112,25 +112,9 @@ public class Cluster {
 		do {
 			currentBatchesProcessed = batchesProcessed.get();
 		}
-		while(batchesProcessed.compareAndSet(currentBatchesProcessed, currentBatchesProcessed + 1));
+		while(!batchesProcessed.compareAndSet(currentBatchesProcessed, currentBatchesProcessed + 1));
 	}
 
-	public void increaseCpuTime() {
-		int currentCpuTime;
-		do {
-			currentCpuTime = cpuTime.get();
-		}
-		while(batchesProcessed.compareAndSet(currentCpuTime, currentCpuTime + 1));
-
-	}
-	public void increaseGpuTime() {
-		int currentGpuTime;
-		do {
-			currentGpuTime = gpuTime.get();
-		}
-		while(batchesProcessed.compareAndSet(currentGpuTime, currentGpuTime + 1));
-
-	}
 
 	// GPU get DB set
 	public DatabatchQueue getProcessedData(GPU gpu, int count) {
@@ -151,5 +135,35 @@ public class Cluster {
 		//
 		return resultQueue;
 	}
+
+
+	///
+	public void increaseCpuTime() {
+		int currentCpuTime;
+		do {
+			currentCpuTime = cpuTime.get();
+		}
+		while(!cpuTime.compareAndSet(currentCpuTime, currentCpuTime + 1));
+
+	}
+	public void increaseGpuTime() {
+		int currentGpuTime;
+		do {
+			currentGpuTime = gpuTime.get();
+		}
+		while(!gpuTime.compareAndSet(currentGpuTime, currentGpuTime + 1));
+
+	}
+	public int getBatchesProcessed(){
+		return batchesProcessed.get();
+	}
+	public int getCpuTime(){
+		return cpuTime.get();
+	}
+	public int getGpuTime(){
+		return gpuTime.get();
+	}
+
+
 
 }

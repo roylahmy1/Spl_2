@@ -36,6 +36,7 @@ public class MessageBusImpl implements MessageBus {
 	ConcurrentHashMap<MicroService, Queue<Message>> registeredServices;
 	// hold events to the future they sent
 	private ConcurrentHashMap<Event<?>, Future<?>> futures;
+	Object unregisterLock = new Object();
 
 	private static MessageBusImpl singletonInstance = new MessageBusImpl();
 	private static class  SingletonHolder {
@@ -94,7 +95,8 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> void complete(Event<T> e, T result) {
 		Future future = futures.get(e);
-		if (future.isDone()){
+
+		if (future == null){
 			System.out.println("is done");
 		}
 		else
@@ -105,15 +107,17 @@ public class MessageBusImpl implements MessageBus {
 	public void sendBroadcast(Broadcast b) {
 		// TODO Auto-generated method stub
 		Subscription sub = Subscriptions.get(b.getClass());
-		synchronized (sub){
+		synchronized (unregisterLock){
 			ArrayList<MicroService> services = sub.getAllServices();
 			for (MicroService service: services) {
 				Queue<Message> queue = registeredServices.get(service);
-				if (queue != null){
-					synchronized (queue){
+				if (queue != null) {
+					synchronized (queue) {
 						queue.add(b);
 						queue.notifyAll(); // notify new message
 					}
+				} else {
+					int c = 1;
 				}
 			}
 		}
@@ -123,24 +127,24 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		// TODO Auto-generated method stub
-		Subscription sub = Subscriptions.get(e.getClass());
-		if(sub != null && sub.getAllServices().size() <= 0)
-			return null;
-		//System.out.println("event: " + e.toString());
-		//System.out.println("subs number: " + sub.getAllServices().size());
-		MicroService m = sub.getNextService();
-
-		Queue<Message> q = registeredServices.get(m);
-		synchronized (q){
-			q.add(e);
-			q.notifyAll(); // notify new message
-		}
-
-		//
-		synchronized (futures) {
+		synchronized (unregisterLock) {
+			// first set future, then send event
 			Future<T> future = new Future<T>();
-			futures.put(e, future);
+			synchronized (futures) {
+				futures.put(e, future);
+			}
+			//
+			Subscription sub = Subscriptions.get(e.getClass());
+			if (sub != null && sub.getAllServices().size() <= 0)
+				return null;
+			MicroService m = sub.getNextService();
+
+			Queue<Message> q = registeredServices.get(m);
+			synchronized (q) {
+				q.add(e);
+				q.notifyAll(); // notify new message
+			}
+			//
 			return future;
 		}
 	}
@@ -157,13 +161,23 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void unregister(MicroService m) {
 		// TODO Auto-generated method stub
-		synchronized (m) {
+		synchronized (unregisterLock) {
 			registeredServices.remove(m);
 
 			// remove all subs of this service
 			for (Subscription sub : Subscriptions.values()) {
-				if (sub.isServiceExist(m)) // n
-					sub.removeService(m);
+				synchronized (sub) {
+					if (sub.isServiceExist(m)){
+						// try clean any lef queue's
+//						ArrayList<MicroService> queue = sub.getAllServices();
+//						if (queue != null && queue.size() > 0){
+//							synchronized (queue){
+//								queue.notifyAll();
+//							}
+//						}
+						sub.removeService(m);
+					}
+				}
 			}
 		}
 
@@ -190,28 +204,36 @@ public class MessageBusImpl implements MessageBus {
 
 	private class Subscription {
 		private int lastCalled = 0;
-		private ArrayList<MicroService> services = new ArrayList<MicroService>();
+		private ArrayList<MicroService> nonRemovableServices = new ArrayList<MicroService>();
+		private ArrayList<MicroService> removableServices = new ArrayList<MicroService>();
 		public Subscription(MicroService initService) {
-			services.add(initService);
+			nonRemovableServices.add(initService);
+			removableServices.add(initService);
 		}
 		public synchronized void addService(MicroService service){
-			services.add(service);
+			nonRemovableServices.add(service);
+			removableServices.add(service);
 		}
 		public boolean isServiceExist(MicroService service){
-			return services.contains(service);
+			return removableServices.contains(service);
 		}
 		public synchronized void removeService(MicroService service){
-			services.remove(service);
+			removableServices.remove(service);
 		}
 		public synchronized MicroService getNextService() {
-			MicroService service = services.get(lastCalled);
+			MicroService service = nonRemovableServices.get(lastCalled);
 			// update last called according to RoundRobin Rules
-			lastCalled = (lastCalled + 1) % services.size();
-			return  service;
+			lastCalled = (lastCalled + 1) % nonRemovableServices.size();
+			if (!removableServices.contains(service))
+				return getNextService();
+			return service;
 		}
 		public synchronized ArrayList<MicroService> getAllServices(){
-			return services;
+			return removableServices;
 		}
 	}
 
+	public ConcurrentHashMap<MicroService, Queue<Message>> getRegisteredServices() {
+		return registeredServices;
+	}
 }
