@@ -93,10 +93,9 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public <T> void complete(Event<T> e, T result) {
-
 		Future future = futures.get(e);
-		if (future == null){
-			int a = 1;
+		if (future.isDone()){
+			System.out.println("is done");
 		}
 		else
 			future.resolve(result);

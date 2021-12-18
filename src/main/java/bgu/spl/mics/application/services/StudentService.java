@@ -10,6 +10,8 @@ import bgu.spl.mics.application.objects.Student;
 import javax.jws.WebParam;
 import java.util.ArrayList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -23,6 +25,7 @@ import java.util.Queue;
 public class StudentService extends MicroService {
 
     private Student student;
+    private Queue<Future> futures = new ConcurrentLinkedQueue<>();
     int modelIndex = 0;
     public StudentService(String name, Student student) {
         super(name);
@@ -39,32 +42,27 @@ public class StudentService extends MicroService {
                 }
             }
         });
+        // loop ticker to check if any models completed
+        subscribeBroadcast(TickBroadcast.class, tick -> {
+            for (Future future: futures) {
+                if (future.isDone()){
+                    try {
+                        testAndPublishModel((Model) future.get());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    futures.remove(future);
+                }
+            }
+        });
         //
         subscribeEvent(GpuReadyEvent.class, event ->{
             if (modelIndex < student.getModels().length) {
                 Model model = student.getModels()[modelIndex];
-                try {
-                    // train model
-                    TrainModelEvent trainModelEvent = new TrainModelEvent(model, event.getSender());
-                    Future futureTrain = sendEvent(trainModelEvent);
-                    model = (Model) futureTrain.get();
-                    System.out.println("Train model finished: " + trainModelEvent.toString());
-                    // test model
-                    TestModelEvent testModelEvent = new TestModelEvent(model);
-                    Future futureTest = sendEvent(testModelEvent);
-                    model = (Model) futureTest.get();
-                    System.out.println("Test model finished: " + trainModelEvent.toString());
-                    //
-                    if (model.getResults() == Model.Results.Good) {
-                        PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
-                        sendEvent(publishResultsEvent);
-                        System.out.println("publish model finished: " + trainModelEvent.toString());
-                    } else {
-                        System.out.println(" model finished bad: " + trainModelEvent.toString());
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                // train model
+                TrainModelEvent trainModelEvent = new TrainModelEvent(model, event.getSender());
+                Future futureTrain = sendEvent(trainModelEvent);
+                futures.add(futureTrain);
                 modelIndex++;
             }
             else{
@@ -72,6 +70,25 @@ public class StudentService extends MicroService {
                 sendEvent(event);
             }
         });
+    }
+
+    private void testAndPublishModel(Model model) throws InterruptedException {
+        if (model != null){
+            System.out.println("Train model finished");
+            // test model
+            TestModelEvent testModelEvent = new TestModelEvent(model);
+            Future futureTest = sendEvent(testModelEvent);
+            model = (Model) futureTest.get();
+            System.out.println("Test model finished");
+            //
+            if (model.getResults() == Model.Results.Good) {
+                PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
+                sendEvent(publishResultsEvent);
+                System.out.println("publish model finished");
+            } else {
+                System.out.println(" model finished bad");
+            }
+        }
     }
 
     @Override

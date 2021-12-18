@@ -120,6 +120,7 @@ public class GPUService extends MicroService {
         if (!hasSentGpuReadyEvent){
             GpuReadyEvent event = new GpuReadyEvent(gpu);
             sendEvent(event);
+            hasSentGpuReadyEvent = true;
         }
     }
 }
