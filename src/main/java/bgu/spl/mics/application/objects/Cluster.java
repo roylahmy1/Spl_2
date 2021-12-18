@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing the cluster.
@@ -30,11 +31,15 @@ public class Cluster {
 
 	private static Cluster singletonInstance = new Cluster();
 
-	LinkedList<GPU> gpuList;
-	LinkedList<CPU> cpuList;
-	int ModelsProceessed = 0;
-	int ModelsStarted = 0;
-	LinkedList<Model> startedTrainedModels;
+	private LinkedList<GPU> gpuList;
+	private LinkedList<CPU> cpuList;
+	private int ModelsProceessed = 0;
+	private int ModelsStarted = 0;
+	private LinkedList<Model> startedTrainedModels;
+	// stats
+	private AtomicInteger batchesProcessed = new AtomicInteger(0);
+	private AtomicInteger cpuTime = new AtomicInteger(0);
+	private AtomicInteger gpuTime = new AtomicInteger(0);
 	//
 	private int unprocessedIndex;
 	private ConcurrentLinkedQueue<Data> unprocessedDataSets = new ConcurrentLinkedQueue<Data>();
@@ -102,7 +107,31 @@ public class Cluster {
 	public void storeProcessedData(DataBatch db) {
 		//
 		processedDataSets.get(db.getContainer().getHolderGpu()).add(db);
+		//
+		int currentBatchesProcessed;
+		do {
+			currentBatchesProcessed = batchesProcessed.get();
+		}
+		while(batchesProcessed.compareAndSet(currentBatchesProcessed, currentBatchesProcessed + 1));
 	}
+
+	public void increaseCpuTime() {
+		int currentCpuTime;
+		do {
+			currentCpuTime = cpuTime.get();
+		}
+		while(batchesProcessed.compareAndSet(currentCpuTime, currentCpuTime + 1));
+
+	}
+	public void increaseGpuTime() {
+		int currentGpuTime;
+		do {
+			currentGpuTime = gpuTime.get();
+		}
+		while(batchesProcessed.compareAndSet(currentGpuTime, currentGpuTime + 1));
+
+	}
+
 	// GPU get DB set
 	public DatabatchQueue getProcessedData(GPU gpu, int count) {
 		//

@@ -45,7 +45,10 @@ public class ConferenceService extends MicroService {
             }
         });
         subscribeEvent(PublishResultsEvent.class, publish -> {
-            confrenceInformation.addPublication(publish.getModel());
+            if (confrenceInformation.hasPublished())
+                confrenceInformation.addPublication(publish.getModel());
+            else // in case of where it already published, then move to next confrence
+                sendEvent(publish);
         });
         subscribeBroadcast(ExitBroadcast.class, exit -> {
             terminate();

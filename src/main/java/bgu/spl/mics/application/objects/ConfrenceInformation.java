@@ -18,6 +18,7 @@ public class ConfrenceInformation {
     public ConfrenceInformation(String name, int date){
         this.date = date;
         this.name = name;
+        publications = new ArrayList<Model>();
     }
 
     public int getDate() {
@@ -31,6 +32,9 @@ public class ConfrenceInformation {
         publications.add(model);
     }
     public ArrayList<Model> getPublications(){
+        if(publications == null){
+            return new ArrayList<Model>();
+        }
         return publications;
     }
     public Boolean hasPublished(){

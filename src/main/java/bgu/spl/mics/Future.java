@@ -34,7 +34,7 @@ public class Future<T> {
 	public synchronized T get() throws InterruptedException {
 		while (!isResolved){
 			try{
-				wait();
+				wait(100);
 			}
 			catch (InterruptedException ex){
 				ex.printStackTrace();

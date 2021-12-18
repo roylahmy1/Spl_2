@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class GPUService extends MicroService {
     GPU gpu;
     TrainModelEvent currentEvent;
-    public int tickCounter = 0;
     Queue<TrainModelEvent> modelsQueue = new ConcurrentLinkedQueue<>();
     //
     boolean hasSentGpuReadyEvent = false;
@@ -41,11 +40,6 @@ public class GPUService extends MicroService {
 
 
         subscribeBroadcast(TickBroadcast.class, tick -> {
-//            tickCounter++;
-//            if (tickCounter % 50 == 0){
-//                System.out.println("ticker alive: " + gpu.toString());
-//            }
-            //System.out.println(" GPU Ticker" + tick.getCurrentTime());
             if (gpu.getModel() != null){
                 // reset the has sent gpu
                 hasSentGpuReadyEvent = false;
@@ -57,8 +51,7 @@ public class GPUService extends MicroService {
                 if (!gpu.isEmptyVRAM())
                 {
                     gpu.processTick();
-                    //if (tick.getCurrentTime() % 100 == 0)
-                        //System.out.println(" GPU " + name + " processs tick: at time" + tick.getCurrentTime());
+                    Cluster.getInstance().increaseCpuTime();
                 }
                 else{
                     if (gpu.isCompleted()) {
@@ -66,23 +59,30 @@ public class GPUService extends MicroService {
                         gpu.getModel().setStatus(Model.Status.Trained);
                         complete(currentEvent, gpu.getModel());
                         gpu.clean();
-                        gpuReady();
+                        //gpuReady();
                     }
                     //System.out.println(" GPU idel, no VRAM" + tick.getCurrentTime());
                     // else means the service is sitting idle, waiting for cpu to finish
                 }
             }
             else {
-                gpuReady();
+                //gpuReady();
             }
         });
-        subscribeEvent(TestModelEvent.class, event -> {
-            gpu.testModel(event.getModel());
-            complete(event, event.getModel());
+        subscribeEvent(TestModelEvent.class, testEvent -> {
+            gpu.testModel(testEvent.getModel());
+            complete(testEvent, testEvent.getModel());
         });
         subscribeEvent(TrainModelEvent.class, event -> {
-            if (gpu.getModel() != null)
+            if (gpu.getModel() != null) {
+                // prevent busy wait
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 sendEvent(event);
+            }
             else{
                 currentEvent = event;
                 gpu.TrainModel(event.getModel());
@@ -110,17 +110,9 @@ public class GPUService extends MicroService {
 
     }
     private void gpuReady(){
-//        if (!modelsQueue.isEmpty()){
-//            currentEvent = modelsQueue.poll();
-//            gpu.TrainModel(currentEvent.getModel());
-//        }
-//        else{
-            // queue is empty
-            // hasSentGpuReadyEvent must be sent only once while waiting
-        if (!hasSentGpuReadyEvent){
-            GpuReadyEvent event = new GpuReadyEvent(gpu);
-            sendEvent(event);
-            hasSentGpuReadyEvent = true;
+        if (!modelsQueue.isEmpty()){
+            currentEvent = modelsQueue.poll();
+            gpu.TrainModel(currentEvent.getModel());
         }
     }
 }

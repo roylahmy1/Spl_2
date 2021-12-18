@@ -42,53 +42,12 @@ public class StudentService extends MicroService {
                 }
             }
         });
-        // loop ticker to check if any models completed
-        subscribeBroadcast(TickBroadcast.class, tick -> {
-            for (Future future: futures) {
-                if (future.isDone()){
-                    try {
-                        testAndPublishModel((Model) future.get());
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    futures.remove(future);
-                }
-            }
-        });
-        //
-        subscribeEvent(GpuReadyEvent.class, event ->{
-            if (modelIndex < student.getModels().length) {
-                Model model = student.getModels()[modelIndex];
-                // train model
-                TrainModelEvent trainModelEvent = new TrainModelEvent(model, event.getSender());
-                Future futureTrain = sendEvent(trainModelEvent);
-                futures.add(futureTrain);
-                modelIndex++;
-            }
-            else{
-                // in no model's left, move them forward
-                sendEvent(event);
-            }
+        subscribeBroadcast(ExitBroadcast.class, exit -> {
+            terminate();
         });
     }
 
     private void testAndPublishModel(Model model) throws InterruptedException {
-        if (model != null){
-            System.out.println("Train model finished");
-            // test model
-            TestModelEvent testModelEvent = new TestModelEvent(model);
-            Future futureTest = sendEvent(testModelEvent);
-            model = (Model) futureTest.get();
-            System.out.println("Test model finished");
-            //
-            if (model.getResults() == Model.Results.Good) {
-                PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
-                sendEvent(publishResultsEvent);
-                System.out.println("publish model finished");
-            } else {
-                System.out.println(" model finished bad");
-            }
-        }
     }
 
     @Override
@@ -106,11 +65,44 @@ public class StudentService extends MicroService {
 
         */
 
-
-
         // loop untrained models
-//        for (Model model: student.getModels()) {
-//        }
+        int i = 0;
+        for (i = 0; i < student.getModels().length; i++) {
+            // train model
+            Model model = student.getModels()[i];
+            TrainModelEvent trainModelEvent = new TrainModelEvent(model);
+            Future futureTrain = sendEvent(trainModelEvent);
+            try {
+                Model trainedModel = (Model)futureTrain.get(5, TimeUnit.SECONDS);
+                if (trainedModel != null){
+                    System.out.println("Train model finished");
+                    // test model
+                    TestModelEvent testModelEvent = new TestModelEvent(trainedModel);
+                    Future futureTest = sendEvent(testModelEvent);
+                    Model testedModel = (Model)futureTest.get();
+                    System.out.println("Test model finished");
+                    //
+                    if (model.getResults() == Model.Results.Good) {
+                        PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
+                        sendEvent(publishResultsEvent);
+                        System.out.println("publish model finished");
+                    } else {
+                        System.out.println(" model finished bad");
+                    }
+                }
+                else{
+                    if(trainModelEvent.getModel().isCompleted()){
+                        modelIndex++;
+                        System.out.println("model future not working " + modelIndex);
+                    }
+                    else{
+                        int b = 1;
+                    }
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
     }
 }

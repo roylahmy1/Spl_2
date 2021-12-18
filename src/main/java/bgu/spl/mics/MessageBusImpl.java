@@ -99,29 +99,21 @@ public class MessageBusImpl implements MessageBus {
 		}
 		else
 			future.resolve(result);
-//
-//		// TODO Auto-generated method stub
-//		result = (T) Subscriptions.get(e);
-//		futures.put(e, (Future<?>) result);
-//		this.notify();
 	}
 
 	@Override
 	public void sendBroadcast(Broadcast b) {
 		// TODO Auto-generated method stub
 		Subscription sub = Subscriptions.get(b.getClass());
-		ArrayList<MicroService> services = sub.getAllServices();
-
-		for (MicroService service: services) {
-			Queue<Message> queue = registeredServices.get(service);
-//			if(queue == null) {
-//				int a = 1;
-//			}
-
-			if (queue != null){
-				synchronized (queue){
-					queue.add(b);
-					queue.notifyAll(); // notify new message
+		synchronized (sub){
+			ArrayList<MicroService> services = sub.getAllServices();
+			for (MicroService service: services) {
+				Queue<Message> queue = registeredServices.get(service);
+				if (queue != null){
+					synchronized (queue){
+						queue.add(b);
+						queue.notifyAll(); // notify new message
+					}
 				}
 			}
 		}
@@ -146,9 +138,11 @@ public class MessageBusImpl implements MessageBus {
 		}
 
 		//
-		Future<T> future = new Future<T>();
-		futures.put(e, future);
-		return future;
+		synchronized (futures) {
+			Future<T> future = new Future<T>();
+			futures.put(e, future);
+			return future;
+		}
 	}
 
 	@Override
