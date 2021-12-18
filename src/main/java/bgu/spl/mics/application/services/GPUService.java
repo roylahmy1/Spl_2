@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class GPUService extends MicroService {
     GPU gpu;
     TrainModelEvent currentEvent;
+    public int tickCounter = 0;
     Queue<TrainModelEvent> modelsQueue = new ConcurrentLinkedQueue<>();
 
     public GPUService(String name, GPU.Type type) {
@@ -41,18 +42,30 @@ public class GPUService extends MicroService {
 
 
         subscribeBroadcast(TickBroadcast.class, tick -> {
+//            tickCounter++;
+//            if (tickCounter % 50 == 0){
+//                System.out.println("ticker alive: " + gpu.toString());
+//            }
+            //System.out.println(" GPU Ticker" + tick.getCurrentTime());
             if (gpu.getModel() != null){
-                if (gpu.isEmptyVRAM())
+                if (gpu.isEmptyVRAM()) {
                     gpu.fillVRAM();
+                    System.out.println(" GPU fill VRAM" + tick.getCurrentTime());
+                }
                 if (!gpu.isEmptyVRAM())
+                {
                     gpu.processTick();
+                    System.out.println(" GPU processs tick: at time" + tick.getCurrentTime());
+                }
                 else{
                     if (gpu.isCompleted()) {
+                        System.out.println(" GPU COMPLETED: at time" + tick.getCurrentTime());
                         gpu.getModel().setStatus(Model.Status.Trained);
                         complete(currentEvent, gpu.getModel());
                         gpu.clean();
                         pullNextModel();
                     }
+                    System.out.println(" GPU idel, no VRAM" + tick.getCurrentTime());
                     // else means the service is sitting idle, waiting for cpu to finish
                 }
             }

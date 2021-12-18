@@ -79,7 +79,7 @@ public class Cluster {
 		Data data = unprocessedDataSets.poll();
 		if (data == null)
 			return null;
-		Chunk chunk = data.getChunk(16);
+		Chunk chunk = data.getChunk(1);
 		// re add data to the end of the queue
 		if (!data.isCompleted())
 			unprocessedDataSets.add(data);
@@ -93,6 +93,7 @@ public class Cluster {
 	// GPU get DB set
 	public DatabatchQueue getProcessedData(GPU gpu, int count) {
 		//
+		System.out.println("fill VRAM with " + count);
 		DatabatchQueue gpuQueue = processedDataSets.get(gpu);
 		DatabatchQueue resultQueue = new DatabatchQueue();
 
@@ -104,6 +105,7 @@ public class Cluster {
 			count--;
 			resultQueue.add(db);
 		}
+		System.out.println("finished filling VRAM with " + count);
 		//
 		return resultQueue;
 	}

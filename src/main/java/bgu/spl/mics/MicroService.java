@@ -33,6 +33,8 @@ public abstract class MicroService implements Runnable {
      */
     public MicroService(String name) {
         this.name = name;
+        MessageBus msgBus = MessageBusImpl.getInstance();
+        msgBus.register(this);
     }
 
     /**
@@ -155,13 +157,19 @@ public abstract class MicroService implements Runnable {
     public final void run() {
         initialize();
         MessageBus msgBus = MessageBusImpl.getInstance();
-        msgBus.register(this);
         while (!terminated) {
             try {
                 // Wait for a message, if not null then execute function(callback) accordingly
+                //System.out.println("start awaiting " + this.toString());
                 Message m = msgBus.awaitMessage(this);
-                if (m != null)
-                    functions.get(m).call(m);
+                //System.out.println("end awaiting " + this.toString() + " with msg " + m.toString());
+                if (m != null) {
+                    //if (functions.get(m.getClass()) == null){
+                        //System.out.println("function: ...");
+                        //System.out.println("msg: " + m.toString() + "::: service: " + this.toString());
+                    //}
+                    functions.get(m.getClass()).call(m);
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

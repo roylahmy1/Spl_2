@@ -93,5 +93,7 @@ public interface MessageBus {
      *                              to became available.
      */
     Message awaitMessage(MicroService m) throws InterruptedException;
-    
+
+    // extra function for testing
+    public void clear();
 }

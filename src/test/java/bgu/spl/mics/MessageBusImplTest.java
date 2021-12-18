@@ -30,14 +30,15 @@ public class MessageBusImplTest extends TestCase {
 //        GPU gpu = new GPU(Cluster.getInstance(), .Type.RTX2080);
 
         messageBus = MessageBusImpl.getInstance();
-//        CPUService cpuService = new CPUService("Cpu 1", cpu);
-//        GPUService gpuService = new GPUService("Gpu 1", gpu);
-        tickBroadcast = new TickBroadcast();
+        cpuService = new CPUService("Cpu 1", 32);
+        cpuService1 = new CPUService("Cpu1 1", 16);
+        gpuService = new GPUService("Gpu 1", GPU.Type.RTX2080);
+        tickBroadcast = new TickBroadcast(1);
         testEvent = new ExampleEvent("Tick 1");
         testBroadcast = new ExampleBroadcast("Tick 2");
-        messageBus.register(gpuService);
-        messageBus.register(cpuService);
-        messageBus.register(cpuService1);
+        //messageBus.register(gpuService);
+        //messageBus.register(cpuService);
+        //messageBus.register(cpuService1);
     }
 
     public void testGetInstance() {
@@ -67,9 +68,10 @@ public class MessageBusImplTest extends TestCase {
     }
 
     public void testSubscribeAndSendBroadcast() {
-        MessageBusImpl.resetSingleton();
-        messageBus.register(cpuService);
-        messageBus.register(gpuService);
+//        MessageBusImpl.resetSingleton();
+//        messageBus = MessageBusImpl.getInstance();
+//        messageBus.register(cpuService);
+//        messageBus.register(gpuService);
         messageBus.subscribeBroadcast(testBroadcast.getClass(), cpuService);
         messageBus.subscribeBroadcast(testBroadcast.getClass(), gpuService);
         // check a thread can get broadcast event from other threads
@@ -94,16 +96,17 @@ public class MessageBusImplTest extends TestCase {
                 }
             }
         });
-        Thread sender = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                messageBus.sendBroadcast(testBroadcast);
-            }
-        });
+//        Thread sender = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                messageBus.sendBroadcast(testBroadcast);
+//            }
+//        });
 
         run1.start();
         run2.start();
-        sender.start();
+        messageBus.sendBroadcast(testBroadcast);
+        //sender.start();
     }
 
     public void testComplete() throws InterruptedException {

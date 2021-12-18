@@ -38,7 +38,10 @@ public class TimeService extends MicroService{
 		int totalTicks = maxTime / tickInterval;
 
 		for (int t = 0; t <= totalTicks; t++){
-			TickBroadcast tick = new TickBroadcast();
+//			if (t % 50 == 0){
+//				System.out.println("ticker alive");
+//			}
+			TickBroadcast tick = new TickBroadcast(t);
 			sendBroadcast(tick);
 			//
 			try {

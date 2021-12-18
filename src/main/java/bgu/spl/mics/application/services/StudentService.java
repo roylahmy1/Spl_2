@@ -67,14 +67,20 @@ public class StudentService extends MicroService {
                 TrainModelEvent trainModelEvent = new TrainModelEvent(model);
                 Future futureTrain = sendEvent(trainModelEvent);
                 model = (Model)futureTrain.get();
+                System.out.println("Train model finished: " + trainModelEvent.toString());
                 // test model
                 TestModelEvent testModelEvent = new TestModelEvent(model);
                 Future futureTest = sendEvent(testModelEvent);
                 model = (Model)futureTest.get();
+                System.out.println("Test model finished: " + trainModelEvent.toString());
                 //
                 if (model.getResults() == Model.Results.Good){
                   PublishResultsEvent publishResultsEvent = new PublishResultsEvent(model);
                   sendEvent(publishResultsEvent);
+                    System.out.println("publish model finished: " + trainModelEvent.toString());
+                }
+                else{
+                    System.out.println(" model finished bad: " + trainModelEvent.toString());
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

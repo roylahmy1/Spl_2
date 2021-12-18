@@ -3,6 +3,7 @@ package bgu.spl.mics;
 import java.security.Provider;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
@@ -56,19 +57,37 @@ public class MessageBusImpl implements MessageBus {
 
 	public static void resetSingleton() {
 		SingletonHolder.instance = new MessageBusImpl();
+		getInstance().clear();
+	}
+	public void clear() {
+		Subscriptions = new HashMap<Class<? extends Message>, Subscription>();
+		registeredServices = new HashMap<MicroService, Queue<Message>>();
+		futures = new HashMap<Event<?>, Future<?>>();
 	}
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-		Subscription sub = new Subscription(m);
-		Subscriptions.put(type, sub);
+		synchronized(type) {
+			Subscription sub = Subscriptions.get(type);
+			if (sub == null)
+				sub = new Subscription(m);
+			else
+				sub.addService(m);
+			Subscriptions.put(type,sub);
+		}
 	}
 
 	@Override
 	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
 		// TODO Auto-generated method stub
-		Subscription sub=new Subscription(m);
-		Subscriptions.put(type,sub);
+		synchronized(type) {
+			Subscription sub = Subscriptions.get(type);
+			if (sub == null)
+				sub = new Subscription(m);
+			else
+				sub.addService(m);
+			Subscriptions.put(type,sub);
+		}
 
 	}
 
@@ -93,9 +112,10 @@ public class MessageBusImpl implements MessageBus {
 		ArrayList<MicroService> services = sub.getAllServices();
 
 		for (MicroService service: services) {
-			Queue<Message> queue = registeredServices.get(b);
+			Queue<Message> queue = registeredServices.get(service);
 			synchronized (queue){
 				queue.add(b);
+				queue.notifyAll(); // notify new message
 			}
 		}
 
@@ -108,8 +128,8 @@ public class MessageBusImpl implements MessageBus {
 		Subscription sub = Subscriptions.get(e.getClass());
 		if(sub != null && sub.getAllServices().size() <= 0)
 			return null;
-		System.out.println("event: " + e.toString());
-		System.out.println("subs number: " + sub.getAllServices().size());
+		//System.out.println("event: " + e.toString());
+		//System.out.println("subs number: " + sub.getAllServices().size());
 		MicroService m = sub.getNextService();
 
 		Queue<Message> q = registeredServices.get(m);
@@ -127,7 +147,7 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public void register(MicroService m) {
 		//
-		Queue<Message> queue = new PriorityQueue<Message>();
+		Queue<Message> queue = new ConcurrentLinkedQueue<Message>();
 		registeredServices.put(m, queue);
 	}
 

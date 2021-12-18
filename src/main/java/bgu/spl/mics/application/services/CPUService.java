@@ -17,6 +17,7 @@ import bgu.spl.mics.application.objects.Cluster;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class CPUService extends MicroService {
+    int tickCounter = 0;
     CPU cpu;
     public CPUService(String name, int cores) throws InterruptedException {
         super(name);
@@ -25,9 +26,14 @@ public class CPUService extends MicroService {
 
         // tick
         subscribeBroadcast(TickBroadcast.class, tick -> {
+//            tickCounter++;
+//            if (tickCounter % 50 == 0){
+//                System.out.println("ticker alive: " + cpu.toString());
+//            }
             // update chunk if null
             if(cpu.isEmptyChunk()){
                 cpu.updateChunk();
+                //System.out.println("cpu update chunk: " + cpu.toString());
             }
             // if chunk is not empty then process a tick
             if(!cpu.isEmptyChunk()) {
