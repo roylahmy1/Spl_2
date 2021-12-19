@@ -62,6 +62,6 @@ public class Student {
             if (model.isCompleted())
                 newModels.add(model);
         }
-        models = newModels.toArray(models);
+        models = newModels.toArray(new Model[0]);
     }
 }

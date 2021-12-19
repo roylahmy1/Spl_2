@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Event;
 import bgu.spl.mics.Future;
+import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
@@ -10,6 +12,7 @@ import bgu.spl.mics.application.objects.Student;
 import javax.jws.WebParam;
 import java.util.ArrayList;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +63,7 @@ public class StudentService extends MicroService {
             currentModel = student.getModels()[nextModelIndex];
             TrainModelEvent trainModelEvent = new TrainModelEvent(currentModel);
             currentFuture = sendEvent(trainModelEvent);
+
             nextModelIndex++;
         }
         else{
@@ -69,7 +73,13 @@ public class StudentService extends MicroService {
     private void testAndPublishModel() throws InterruptedException {
         // loop until model is complete, to prevent await if terminated
         if (currentModel != null && !isTerminated()){
-            if (currentFuture.isDone() || currentModel.isCompleted()){
+            ////
+            ConcurrentHashMap<Event<?>,Future<?>> fetures = MessageBusImpl.getInstance().getFutures();
+            if (!fetures.contains(currentFuture)){
+                int a = 1;
+            }
+            ////
+            if (currentFuture.isDone()){
                 //System.out.println("Train model finished");
                 // test model
                 TestModelEvent testModelEvent = new TestModelEvent(currentModel);

@@ -128,11 +128,16 @@ public class MessageBusImpl implements MessageBus {
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
 		synchronized (unregisterLock) {
-			// first set future, then send event
-			Future<T> future = new Future<T>();
-			synchronized (futures) {
-				futures.put(e, future);
+			// first set future, if no future already exists, then create future
+			Future<T> future;
+			if (!futures.containsKey(e)) {
+				future = new Future<T>();
+				synchronized (futures) {
+					futures.put(e, future);
+				}
 			}
+			else
+				future = (Future<T>)futures.get(e);
 			//
 			Subscription sub = Subscriptions.get(e.getClass());
 			if (sub != null && sub.getAllServices().size() <= 0)
@@ -168,13 +173,6 @@ public class MessageBusImpl implements MessageBus {
 			for (Subscription sub : Subscriptions.values()) {
 				synchronized (sub) {
 					if (sub.isServiceExist(m)){
-						// try clean any lef queue's
-//						ArrayList<MicroService> queue = sub.getAllServices();
-//						if (queue != null && queue.size() > 0){
-//							synchronized (queue){
-//								queue.notifyAll();
-//							}
-//						}
 						sub.removeService(m);
 					}
 				}
@@ -233,7 +231,7 @@ public class MessageBusImpl implements MessageBus {
 		}
 	}
 
-	public ConcurrentHashMap<MicroService, Queue<Message>> getRegisteredServices() {
-		return registeredServices;
+	public ConcurrentHashMap<Event<?>,Future<?>> getFutures() {
+		return futures;
 	}
 }

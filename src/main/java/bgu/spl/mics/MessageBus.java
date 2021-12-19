@@ -97,7 +97,7 @@ public interface MessageBus {
      */
     Message awaitMessage(MicroService m) throws InterruptedException;
 
-    // extra function for testing
+    // extra function for TESTING ONLY!!!
     public void clear();
-    public ConcurrentHashMap<MicroService, Queue<Message>> getRegisteredServices();
+    public ConcurrentHashMap<Event<?>,Future<?>> getFutures();
 }

@@ -86,7 +86,6 @@ public class GPU {
             currentDataBatch = null;
             currentProgress = 0;
         }
-
     }
     // check if VRAM need's refill
     public synchronized boolean isEmptyVRAM(){

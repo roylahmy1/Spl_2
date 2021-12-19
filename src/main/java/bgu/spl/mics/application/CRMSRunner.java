@@ -19,17 +19,23 @@ import java.util.Scanner;
 public class CRMSRunner {
     public static void main(String[] args) {
 
+        if (args.length != 2){
+            throw new IllegalArgumentException("input args not valid");
+        }
+        // input file path
+        // YONI C:\\Users\\segalyon\\Desktop\\spl2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json
+        // ROY C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json
 
-        ///
-        /// change inputFilePath to args[0]
-        ///
+        // output file path
+        // ROY "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\output.json";
 
+        // "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json", "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\output.json";
+
+        String inputFilePath = args[0];
+        String outputFilePath = args[1];
 
         Gson g = new Gson();
-
-        //String inputFilePath = "C:\\Users\\segalyon\\Desktop\\spl2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//"C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";//args[0];
-        String inputFilePath = "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\exampleInput.json";
-        try {
+       try {
             String file = readFile(inputFilePath);
             InputFile input = g.fromJson(file, InputFile.class);
 
@@ -41,11 +47,9 @@ public class CRMSRunner {
             }
             // set global vars
             InputFile.setTimer(input.TickTime, input.Duration);
-            ////
 
+            /// create services
             ArrayList<MicroService> serviceList = new ArrayList<MicroService>();
-
-            // create services
             // CPU's
             int counter = 0;
             for (int cpuCores : input.getCPUS()) {
@@ -79,8 +83,8 @@ public class CRMSRunner {
             serviceList.add(timeService);
             //timeService.run();
 
+            // init all services
             ArrayList<Thread> threads = new ArrayList<Thread>();
-            // loop all services and init them
             for (MicroService service : serviceList) {
                 Thread run = new Thread(new Runnable() {
                     public void run() {
@@ -90,10 +94,13 @@ public class CRMSRunner {
                 threads.add(run);
                 run.start();
             }
+
             // wait for all to finish
             for (Thread thread : threads) {
                 thread.join();
             }
+
+            // create output file
             OutputFile output = new OutputFile();
             output.setBatchesProcessed(Cluster.getInstance().getBatchesProcessed());
             output.setCpuTimeUsed(Cluster.getInstance().getCpuTime());
@@ -101,26 +108,27 @@ public class CRMSRunner {
             output.setStudents(input.Students);
             output.setConferences(input.getConferences());
 
-            Gson gson = new Gson();
-            String json = gson.toJson(output);
-            String path = "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\output.json";
-            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(path), "utf-8"))) {
-                writer.write(json);
-            }
-            Files.write(Paths.get(path), json.getBytes());
-
-            System.out.println("Hello World!");
+            // parse file to json
+            String json = g.toJson(output);
+            writeFile(json, outputFilePath);
+            System.out.println("program finished!");
             } catch(IOException | InterruptedException e){
                 e.printStackTrace();
             }
         }
 
-        public static String readFile(String path) throws IOException {
+    public static String readFile(String path) throws IOException {
         Scanner scanner = new Scanner( new File(path) );
         String text = scanner.useDelimiter("\\A").next();
         scanner.close(); // Put this call in a finally block
         return  text;
+    }
+    public static void writeFile(String contents, String path) throws IOException {
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(path), "utf-8"))) {
+            writer.write(contents);
+        }
+        Files.write(Paths.get(path), contents.getBytes());
     }
 }
 

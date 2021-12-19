@@ -81,6 +81,7 @@ public class GPUService extends MicroService {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                // create new event so to not overwrite
                 sendEvent(event);
             }
             else{

@@ -35,7 +35,7 @@ public class Cluster {
 	private LinkedList<CPU> cpuList;
 	private int ModelsProceessed = 0;
 	private int ModelsStarted = 0;
-	private LinkedList<Model> startedTrainedModels;
+	private LinkedList<Model> trainedModels;
 	// stats
 	private AtomicInteger batchesProcessed = new AtomicInteger(0);
 	private AtomicInteger cpuTime = new AtomicInteger(0);
@@ -53,7 +53,7 @@ public class Cluster {
 		Map<GPU, Data> unprocessedDataSets;
 		Map<GPU, DatabatchQueue> processedDataSets;
 		//
-		startedTrainedModels = new LinkedList<>();
+		trainedModels = new LinkedList<>();
 	}
 	private static class  SingletonHolder {
 		private static Cluster  instance = new Cluster() ;
@@ -81,10 +81,6 @@ public class Cluster {
 	// GPU stores unprocessed data
 	public void storeUnprocessedData(Data data) {
 		unprocessedDataSets.add(data);
-		synchronized (unprocessedDataSets){
-			ModelsStarted++;
-			startedTrainedModels.add(data.getHolderGpu().getModel());
-		}
 	}
 	// CPU get data in chunks (according to need) of DB
 	public Chunk getUnprocessedData() {
@@ -97,8 +93,9 @@ public class Cluster {
 		if (!data.isCompleted())
 			unprocessedDataSets.add(data);
 		else {
-			synchronized (unprocessedDataSets) {
-				ModelsProceessed++;
+			synchronized (trainedModels) {
+				if (data.getHolderGpu() != null)
+					trainedModels.add(data.getHolderGpu().getModel());
 			}
 		}
 		return chunk;
@@ -107,7 +104,7 @@ public class Cluster {
 	public void storeProcessedData(DataBatch db) {
 		//
 		processedDataSets.get(db.getContainer().getHolderGpu()).add(db);
-		//
+		// update databatches processed
 		int currentBatchesProcessed;
 		do {
 			currentBatchesProcessed = batchesProcessed.get();
