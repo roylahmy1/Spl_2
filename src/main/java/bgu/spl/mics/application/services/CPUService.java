@@ -38,7 +38,6 @@ public class CPUService extends MicroService {
             // if chunk is not empty then process a tick
             if(!cpu.isEmptyChunk()) {
                 cpu.processTick();
-                Cluster.getInstance().increaseCpuTime();
             }
         });
 

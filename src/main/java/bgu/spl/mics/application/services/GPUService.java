@@ -47,7 +47,6 @@ public class GPUService extends MicroService {
                 if (!gpu.isEmptyVRAM())
                 {
                     gpu.processTick();
-                    Cluster.getInstance().increaseCpuTime();
                 }
                 else{
                     if (gpu.isCompleted()) {
