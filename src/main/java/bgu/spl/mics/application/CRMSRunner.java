@@ -5,6 +5,8 @@ import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -99,7 +101,14 @@ public class CRMSRunner {
             output.setStudents(input.Students);
             output.setConferences(input.getConferences());
 
-
+            Gson gson = new Gson();
+            String json = gson.toJson(output);
+            String path = "C:\\Users\\lahmy\\my\\Spl_2\\src\\main\\java\\bgu\\spl\\mics\\example\\output.json";
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(path), "utf-8"))) {
+                writer.write(json);
+            }
+            Files.write(Paths.get(path), json.getBytes());
 
             System.out.println("Hello World!");
             } catch(IOException | InterruptedException e){

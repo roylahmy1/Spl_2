@@ -75,6 +75,10 @@ public class Model {
         return Trained * 1000 >= data.getSize();
     }
 
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
     public synchronized void increaseTrained() {
         Trained++;
     }

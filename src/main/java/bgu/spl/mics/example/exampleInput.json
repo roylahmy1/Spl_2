@@ -31,6 +31,20 @@
 
         },
         {
+            "name": "Zazu",
+            "department": "EE",
+            "status": "PhD",
+            "models":
+            [
+                {
+                    "name": "VIT",
+                    "type": "Images",
+                    "size": 100000000
+                }
+            ]
+
+        },
+        {
             "name": "Pumba",
             "department": "Computer Science",
             "status": "PhD",

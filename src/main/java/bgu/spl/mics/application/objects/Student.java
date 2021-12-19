@@ -57,7 +57,10 @@ public class Student {
     public void removeUntrained(){
         ArrayList<Model> newModels = new ArrayList<Model>();
         for (Model model: models) {
-            newModels.add(model);
+            model.setStudent(null);
+            model.getData().setHolderGpu(null);
+            if (model.isCompleted())
+                newModels.add(model);
         }
         models = newModels.toArray(models);
     }

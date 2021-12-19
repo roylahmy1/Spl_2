@@ -52,7 +52,10 @@ public class GPUService extends MicroService {
                 else{
                     if (gpu.isCompleted()) {
                         System.out.println(" GPU COMPLETED: at time" + tick.getCurrentTime());
-                        gpu.getModel().setStatus(Model.Status.Trained);
+                        synchronized (gpu.getModel()) {
+                            if (gpu.getModel().getStatus() == Model.Status.Training)
+                                gpu.getModel().setStatus(Model.Status.Trained);
+                        }
                         complete(currentEvent, gpu.getModel());
                         gpu.clean();
                         //gpuReady();
@@ -66,7 +69,9 @@ public class GPUService extends MicroService {
             }
         });
         subscribeEvent(TestModelEvent.class, testEvent -> {
-            gpu.testModel(testEvent.getModel());
+            synchronized (testEvent.getModel()) {
+                gpu.testModel(testEvent.getModel());
+            }
             complete(testEvent, testEvent.getModel());
         });
         subscribeEvent(TrainModelEvent.class, event -> {
